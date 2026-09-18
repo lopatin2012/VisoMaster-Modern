@@ -2,7 +2,8 @@
 # VisoMaster-Modern
 
 > **VisoMaster-Modern** is a community fork of [VisoMaster](https://github.com/visomaster/VisoMaster),
-> modernized for recent NVIDIA GPUs (CUDA 12.8+/cu129, Blackwell `sm_120`) and up-to-date runtimes.
+> modernized for recent NVIDIA GPUs (CUDA 12.9/cu129, Blackwell `sm_120`) and up-to-date runtimes
+> (torch 2.8, onnxruntime-gpu 1.23, TensorRT 10.13, PySide6 6.10 + qfluentwidgets).
 > Licensed under **GPL-3.0** (see [LICENSE](LICENSE)); all original copyright belongs to the VisoMaster authors.
 > Upstream project: https://github.com/visomaster/VisoMaster
 
@@ -37,79 +38,69 @@
 - **TensorRT Support**: Leverages supported GPUs for ultra-fast processing  
 - **Many More Advanced Features** 🎉  
 
-## Automatic Installation (Windows)
-- For Windows users with an Nvidia GPU, we provide an automatic installer for easy set up. 
-- You can get the installer from the [releases](https://github.com/visomaster/VisoMaster/releases/tag/v0.1.1) page or from this [link](https://github.com/visomaster/VisoMaster/releases/download/v0.1.1/VisoMaster_Setup.exe).
-- Choose the correct CUDA version inside the installer based on your GPU Compatibility.
-- After successful installation, go to your installed directory and run the **Start_Portable.bat** file to launch **VisoMaster**
+## Requirements
 
-## **Manual Installation Guide (Nvidia)**
+- Windows 10/11 (Linux also works), recent NVIDIA driver.
+- **Python 3.11** — do *not* use 3.14 (no wheels for the pinned stack).
+- This build targets modern GPUs (RTX 40/50 series, `sm_90`/`sm_120`). It does **not** ship the legacy
+  CUDA 11.8/12.4 stacks.
+- ~15 GB free disk for models and caches.
 
-Follow the steps below to install and run **VisoMaster** on your system.
+## Install (Windows, venv)
 
-## **Prerequisites**
-Before proceeding, ensure you have the following installed on your system:
-- **Git** ([Download](https://git-scm.com/downloads))
-- **Miniconda** ([Download](https://www.anaconda.com/download))
-
----
-
-## **Installation Steps**
-
-### **1. Clone the Repository**  
-Open a terminal or command prompt and run:  
 ```sh
-git clone https://github.com/visomaster/VisoMaster.git
-```
-```sh
-cd VisoMaster
+git clone https://github.com/lopatin2012/VisoMaster-Modern.git
+cd VisoMaster-Modern
+py -3.11 -m venv .venv
+.venv\Scripts\python.exe -m pip install -r requirements_cu129.txt
 ```
 
-### **2. Create and Activate a Conda Environment**  
-```sh
-conda create -n visomaster python=3.10.13 -y
-```
-```sh
-conda activate visomaster
-```
+## Models and ffmpeg
 
-### **3. Install CUDA and cuDNN**  
-```sh
-conda install -c nvidia/label/cuda-12.4.1 cuda-runtime
-```
-```sh
-conda install -c conda-forge cudnn
-```
+1. Download the required models:
+   ```sh
+   .venv\Scripts\python.exe download_models.py
+   ```
+2. Download the binaries from the
+   [visomaster-assets release](https://github.com/visomaster/visomaster-assets/releases/tag/v0.1.0_dp)
+   and copy them into the `dependencies/` folder (do **not** download the “Source code” archives).
+   A bundled `dependencies\ffmpeg.exe` is auto-detected, so no system-wide ffmpeg is required.
 
-### **4. Install Additional Dependencies**  
+## Run
+
 ```sh
-conda install scikit-image
-```
-```sh
-pip install -r requirements_cu124.txt
+.venv\Scripts\python.exe main.py
 ```
 
-### **5. Download Models and Other Dependencies**  
-1. Download all the required models
+or double-click **Start.bat** (it uses `.venv` when present). Optional diagnostics:
+
 ```sh
-python download_models.py
+.venv\Scripts\python.exe main.py --profile   # prints per-stage timings to the console
 ```
-2. Download all the files from this [page](https://github.com/visomaster/visomaster-assets/releases/tag/v0.1.0_dp) and copy it to the ***dependencies/*** folder.
 
-  **Note**: You do not need to download the Source code (zip) and Source code (tar.gz) files 
-### **6. Run the Application**  
-Once everything is set up, start the application by opening the **Start.bat** file.
-On Linux just run `python main.py`.
----
+## Optional: TensorRT
 
-## **Troubleshooting**
-- If you face CUDA-related issues, ensure your GPU drivers are up to date.
-- For missing models, double-check that all models are placed in the correct directories.
+TensorRT is installed but the default provider is **CUDA**. In **Settings → Providers Priority** you can
+select *TensorRT*; the first run builds engines into `tensorrt-engines/` (slow once, cached afterwards).
+On the bundled models CUDA was just as fast in testing, so TensorRT is opt-in.
 
-## [Join Discord](https://discord.gg/5rx4SQuDbp)
+## Updating
 
-## Support The Project ##
-This project was made possible by the combined efforts of **[@argenspin](https://github.com/argenspin)** and **[@Alucard24](https://github.com/alucard24)** with the support of countless other members in our Discord community. If you wish to support us for the continued development of **Visomaster**, you can donate to either of us (or Both if you're double Awesome :smiley: )
+```sh
+scripts\update_cu129.bat
+```
+pulls the latest `main` (hard reset) and reinstalls the pinned dependencies.
+
+## Troubleshooting
+
+- CUDA-related issues: make sure the NVIDIA driver is up to date.
+- Missing models: verify the files were placed in the correct `model_assets/` subfolders.
+- Recording/export needs ffmpeg — the bundled `dependencies\ffmpeg.exe` is found automatically.
+
+## [Join the upstream Discord](https://discord.gg/5rx4SQuDbp)
+
+## Support the upstream project ##
+VisoMaster was made possible by **[@argenspin](https://github.com/argenspin)** and **[@Alucard24](https://github.com/alucard24)** with the support of countless other members of the Discord community. If you wish to support the *upstream* project, you can donate to either of them (or both if you're double Awesome :smiley: )
 
 ### **argenspin** ###
 - [BuyMeACoffee](https://buymeacoffee.com/argenspin)
@@ -117,7 +108,7 @@ This project was made possible by the combined efforts of **[@argenspin](https:/
 - ETH: 0x967a442FBd13617DE8d5fDC75234b2052122156B
 ### **Alucard24** ###
 - [BuyMeACoffee](https://buymeacoffee.com/alucard_24)
-- [PayPal](https://www.paypal.com/donate/?business=XJX2E5ZTMZUSQ&no_recurring=0&item_name=Support+us+with+a+donation!+Your+contribution+helps+us+continue+improving+and+providing+quality+content.+Thank+you!&currency_code=EUR)
+- [PayPal](https://www.paypal.com/donate/?business=XJX2E5ZTMZUSQ&no_recurring=0&item_name=Support+us+with+a+donation!&currency_code=EUR)
 - BTC: 15ny8vV3ChYsEuDta6VG3aKdT6Ra7duRAc
 
 
@@ -141,4 +132,4 @@ Liability and Responsibility: We, as the creators and providers of the deep fake
 
 By using this software, users acknowledge that they have read, understood, and agreed to abide by the above guidelines and disclaimers. We strongly encourage users to approach this technology with caution, integrity, and respect for the well-being and rights of others.
 
-Remember, technology should be used to empower and inspire, not to harm or deceive. Let's strive for ethical and responsible use of deep fake technology for the betterment of society.
+Remember, technology should be used to empower and inspire, not to harm or deceive. Let's strive to be ethical and responsible use of deep fake technology for the betterment of society.
