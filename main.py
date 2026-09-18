@@ -8,6 +8,10 @@ import sys
 import qdarktheme
 from app.ui.core.proxy_style import ProxyStyle
 from app.ui.styles.fluent_theme import apply_fluent_theme
+from app.helpers.miscellaneous import ensure_ffmpeg_in_path
+
+# Use the bundled dependencies/ffmpeg(.exe) when running without Start*.bat.
+ensure_ffmpeg_in_path()
 
 # Inference-only performance defaults (fixed shapes, no autograd needed).
 torch.backends.cudnn.benchmark = True

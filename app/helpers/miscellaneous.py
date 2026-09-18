@@ -218,8 +218,23 @@ def get_output_file_path(original_media_path, output_folder, media_type='video')
     output_file_path = os.path.join(output_folder, output_filename)
     return output_file_path
 
+def ensure_ffmpeg_in_path():
+    """Make the bundled ``dependencies/ffmpeg(.exe)`` available on PATH.
+
+    The portable layout ships ffmpeg inside ``./dependencies`` and the ``Start*.bat``
+    launchers add it to PATH, but launching with ``python main.py`` directly does not.
+    Returns True if ffmpeg is usable afterwards.
+    """
+    if cmd_exist('ffmpeg'):
+        return True
+    dependencies_dir = Path(__file__).resolve().parents[2] / 'dependencies'
+    executable = 'ffmpeg.exe' if os.name == 'nt' else 'ffmpeg'
+    if (dependencies_dir / executable).is_file():
+        os.environ['PATH'] = str(dependencies_dir) + os.pathsep + os.environ.get('PATH', '')
+    return cmd_exist('ffmpeg')
+
 def is_ffmpeg_in_path():
-    if not cmd_exist('ffmpeg'):
+    if not ensure_ffmpeg_in_path():
         print("FFMPEG Not found in your system!")
         return False
     return True
