@@ -130,7 +130,7 @@ def save_thumbnail(frame, thumbnail_path):
             raise Exception("PNG too large")
         else:
             return
-    except:
+    except Exception:  # pylint: disable=broad-exception-caught  # fall back to JPEG
         # Define JPEG parameters for high quality
         params = [
             cv2.IMWRITE_JPEG_QUALITY, 98,  # Maximum quality for JPEG

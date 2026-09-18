@@ -625,6 +625,8 @@ TRANSLATIONS = {
         "No Output Folder Selected": "Папка вывода не выбрана",
         "Please select an Output folder to save the Videos before recording!": "Выберите папку вывода для сохранения видео перед записью!",
         "Please select an Output folder to save the Images/Videos before Saving/Recording!": "Выберите папку вывода для сохранения изображений/видео!",
+        "Processing Error": "Ошибка обработки",
+        "An error occurred while processing a frame. See visomaster.log for details.": "Произошла ошибка при обработке кадра. Подробности — в visomaster.log.",
         "FFMPEG Not Found": "FFMPEG не найден",
         "FFMPEG was not found in your system. Check your installation!": "FFMPEG не найден в системе. Проверьте установку!",
         "Invalid Frame": "Некорректный кадр",

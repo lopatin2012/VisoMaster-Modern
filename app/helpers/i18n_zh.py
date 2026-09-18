@@ -468,6 +468,8 @@ ZH = {
     "No Output Folder Selected": "未选择输出文件夹",
     "Please select an Output folder to save the Videos before recording!": "录制前请选择用于保存视频的输出文件夹！",
     "Please select an Output folder to save the Images/Videos before Saving/Recording!": "保存/录制前请选择用于保存图片/视频的输出文件夹！",
+    "Processing Error": "处理错误",
+    "An error occurred while processing a frame. See visomaster.log for details.": "处理帧时发生错误。详情请查看 visomaster.log。",
     "FFMPEG Not Found": "未找到 FFMPEG",
     "FFMPEG was not found in your system. Check your installation!": "系统中未找到 FFMPEG，请检查安装！",
     "Invalid Frame": "无效帧",

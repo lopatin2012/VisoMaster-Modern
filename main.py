@@ -6,6 +6,11 @@ if "--profile" in sys.argv:
     os.environ["VISOMASTER_PROFILE"] = "1"
     sys.argv.remove("--profile")
 
+# Configure logging before importing app modules (some call logging.basicConfig early).
+from app.helpers.logging_setup import setup_logging  # noqa: E402
+
+setup_logging()
+
 import torch  # noqa: F401  # Must be imported before PySide6 on Python 3.10 (PySide6 mutates typing.Self, breaking torch._dynamo / torchvision)
 
 # qfluentwidgets prints a "Pro" advertisement to stdout on its first import; silence it.

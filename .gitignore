@@ -57,6 +57,9 @@ env/
 /dependencies/**
 !/dependencies/.gitkeep
 
+# Runtime logs
+/visomaster.log*
+
 # Tool caches
 .pytest_cache/
 .mypy_cache/

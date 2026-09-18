@@ -1,4 +1,5 @@
 
+import logging
 from typing import TYPE_CHECKING
 
 import torch
@@ -41,7 +42,8 @@ class FaceRestorers:
             tform = trans.SimilarityTransform()
             try:
                 tform.estimate(dst, self.models_processor.FFHQ_kps)
-            except:
+            except Exception:  # pylint: disable=broad-exception-caught
+                logging.getLogger(__name__).debug("SimilarityTransform.estimate failed", exc_info=True)
                 return swapped_face_upscaled
             # Transform, scale, and normalize
             temp = v2.functional.affine(swapped_face_upscaled, tform.rotation*57.2958, (tform.translation[0], tform.translation[1]) , tform.scale, 0, center = (0,0) )

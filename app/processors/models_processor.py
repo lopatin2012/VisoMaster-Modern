@@ -2,7 +2,7 @@ import threading
 import os
 import subprocess as sp
 import gc
-import traceback
+import logging
 from typing import Dict, TYPE_CHECKING
 
 from packaging import version
@@ -40,6 +40,8 @@ if TYPE_CHECKING:
 onnxruntime.set_default_logger_severity(4)
 onnxruntime.log_verbosity_level = -1
 lock = threading.Lock()
+
+logger = logging.getLogger(__name__)
 
 class ModelsProcessor(QtCore.QObject):
     processing_complete = QtCore.Signal()
@@ -173,9 +175,9 @@ class ModelsProcessor(QtCore.QObject):
                     gc.collect()
                 try:
                     self.dfm_models[dfm_model] = DFMModel(self.main_window.dfm_models_data[dfm_model], self.providers, self.device)
-                except:
-                    traceback.print_exc()   
-                    self.dfm_models[dfm_model] = None         
+                except Exception:  # pylint: disable=broad-exception-caught
+                    logger.exception("Failed to load DFM model %s", dfm_model)
+                    self.dfm_models[dfm_model] = None
                 self.main_window.model_loaded_signal.emit()
             return self.dfm_models[dfm_model]
 

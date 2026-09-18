@@ -1,4 +1,4 @@
-import traceback
+import logging
 from typing import TYPE_CHECKING
 import threading
 from math import floor, ceil
@@ -22,6 +22,9 @@ if TYPE_CHECKING:
     from app.ui.main_ui import MainWindow
 
 torchvision.disable_beta_transforms_warning()
+
+logger = logging.getLogger(__name__)
+
 
 class FrameWorker(threading.Thread):
     def __init__(self, frame, main_window: 'MainWindow', frame_number, frame_queue, is_single_frame=False):
@@ -85,9 +88,16 @@ class FrameWorker(threading.Thread):
             if self.video_processor.frame_queue.empty() and not self.video_processor.processing and self.video_processor.next_frame_to_display >= self.video_processor.max_frame_number:
                 self.video_processor.stop_processing()
 
-        except Exception as e: # pylint: disable=broad-exception-caught
-            print(f"Error in FrameWorker: {e}")
-            traceback.print_exc()
+        except Exception:  # pylint: disable=broad-exception-caught
+            logger.exception("Error while processing frame %s", self.frame_number)
+            # Report once per run instead of spamming a dialog for every frame.
+            if not getattr(self.video_processor, "error_reported", False):
+                self.video_processor.error_reported = True
+                self.main_window.display_messagebox_signal.emit(
+                    "Processing Error",
+                    "An error occurred while processing a frame. See visomaster.log for details.",
+                    self.main_window,
+                )
     
     # @misc_helpers.benchmark
     def process_frame(self):
@@ -747,8 +757,8 @@ class FrameWorker(threading.Thread):
         if parameters['JPEGCompressionEnableToggle']:
             try:
                 swap = faceutil.jpegBlur(swap, parameters["JPEGCompressionAmountSlider"])
-            except:
-                pass
+            except Exception:  # pylint: disable=broad-exception-caught
+                logger.debug("jpegBlur failed", exc_info=True)
         if parameters['FinalBlendAdjEnableToggle'] and parameters['FinalBlendAdjEnableToggle'] > 0:
             final_blur_strength = parameters['FinalBlendAmountSlider']  # Ein Parameter steuert beides
             # Bestimme kernel_size und sigma basierend auf dem Parameter

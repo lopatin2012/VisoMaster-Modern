@@ -68,6 +68,7 @@ class VideoProcessor(QObject):
 
         self.current_frame: numpy.ndarray = []
         self.recording = False
+        self.error_reported = False
 
         self.virtcam: pyvirtualcam.Camera|None = None
 
@@ -185,7 +186,9 @@ class VideoProcessor(QObject):
         if self.processing:
             print("Processing already in progress. Ignoring start request.")
             return
-            
+
+        self.error_reported = False
+
         # Re-initialize the timers
         self.frame_display_timer = QTimer()
         self.frame_read_timer = QTimer()
