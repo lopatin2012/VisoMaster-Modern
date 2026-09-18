@@ -1,9 +1,15 @@
+import os
+import sys
+
+# `python main.py --profile` enables the per-stage performance profiler.
+if "--profile" in sys.argv:
+    os.environ["VISOMASTER_PROFILE"] = "1"
+    sys.argv.remove("--profile")
+
 import torch  # noqa: F401  # Must be imported before PySide6 on Python 3.10 (PySide6 mutates typing.Self, breaking torch._dynamo / torchvision)
 
 from app.ui import main_ui
-from PySide6 import QtWidgets 
-import os
-import sys
+from PySide6 import QtWidgets
 
 import qdarktheme
 from app.ui.core.proxy_style import ProxyStyle
