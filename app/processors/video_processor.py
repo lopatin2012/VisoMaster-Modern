@@ -27,6 +27,27 @@ from app.helpers import perf
 if TYPE_CHECKING:
     from app.ui.main_ui import MainWindow
 
+_H264_ENCODER: str | None = None
+
+
+def _detect_h264_encoder() -> str:
+    """Prefer the NVIDIA hardware encoder (h264_nvenc) when the bundled ffmpeg has it."""
+    global _H264_ENCODER
+    if _H264_ENCODER is None:
+        _H264_ENCODER = "libx264"
+        misc_helpers.ensure_ffmpeg_in_path()
+        try:
+            result = subprocess.run(
+                ["ffmpeg", "-hide_banner", "-encoders"],
+                capture_output=True, text=True, encoding="utf-8", errors="ignore",
+            )
+            if "h264_nvenc" in (result.stdout or ""):
+                _H264_ENCODER = "h264_nvenc"
+        except Exception:
+            pass
+        print(f"Video encoder: {_H264_ENCODER}")
+    return _H264_ENCODER
+
 class VideoProcessor(QObject):
     frame_processed_signal = Signal(int, QPixmap, numpy.ndarray)
     webcam_frame_processed_signal = Signal(QPixmap, numpy.ndarray)
@@ -116,7 +137,9 @@ class VideoProcessor(QObject):
             self.send_frame_to_virtualcam(frame)
 
             if self.recording:
-                self.recording_sp.stdin.write(frame.tobytes())
+                # Zero-copy write: avoid a full frame copy from .tobytes() on the hot path.
+                buffer = frame if frame.flags["C_CONTIGUOUS"] else numpy.ascontiguousarray(frame)
+                self.recording_sp.stdin.write(memoryview(buffer).cast("B"))
             # Update the widget values using parameters if it is not recording (The updation of actual parameters is already done inside the FrameWorker, this step is to make the changes appear in the widgets)
             if not self.recording:
                 video_control_actions.update_widget_values_from_markers(self.main_window, self.next_frame_to_display)
@@ -407,6 +430,12 @@ class VideoProcessor(QObject):
         if Path(self.temp_file).is_file():
             os.remove(self.temp_file)
 
+        if _detect_h264_encoder() == "h264_nvenc":
+            # Constant-quality VBR (b:v 0 = CQ mode).
+            codec_args = ["-c:v", "h264_nvenc", "-preset", "p5", "-rc", "vbr", "-cq", "19", "-b:v", "0"]
+        else:
+            codec_args = ["-c:v", "libx264", "-crf", "18"]
+
         args = [
             "ffmpeg",
             "-hide_banner",
@@ -416,9 +445,8 @@ class VideoProcessor(QObject):
             "-s", f"{frame_width}x{frame_height}",  # Frame resolution
             "-r", str(self.fps),          # Frame rate
             "-i", "pipe:",                # Input from stdin
-            "-vf", f"pad=ceil(iw/2)*2:ceil(ih/2)*2,format=yuvj420p",  # Padding and format conversion            
-            "-c:v", "libx264",            # H.264 codec
-            "-crf", "18",                 # Quality setting
+            "-vf", f"pad=ceil(iw/2)*2:ceil(ih/2)*2,format=yuvj420p",  # Padding and format conversion
+            *codec_args,
             self.temp_file                # Output file
         ]
 
