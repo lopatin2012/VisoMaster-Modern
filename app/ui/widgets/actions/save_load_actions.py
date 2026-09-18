@@ -16,6 +16,7 @@ from app.ui.widgets.actions import video_control_actions
 from app.ui.widgets.actions import layout_actions
 from app.ui.widgets import ui_workers
 from app.helpers.typing_helper import ParametersTypes, MarkerTypes
+from app.helpers import i18n
 import app.helpers.miscellaneous as misc_helpers
 
 if TYPE_CHECKING:
@@ -79,7 +80,7 @@ def save_embeddings_to_file(main_window: 'MainWindow', save_as=False):
             embed_file.write(embeddings_as_json)
 
             # Mostra un messaggio di conferma
-            common_widget_actions.create_and_show_toast_message(main_window, 'Embeddings Saved', f'Saved Embeddings to file: {embedding_filename}')
+            common_widget_actions.create_and_show_toast_message(main_window, i18n.tr('Embeddings Saved'), f"{i18n.tr('Saved Embeddings to file:')} {embedding_filename}")
 
         main_window.loaded_embedding_filename = embedding_filename
 
@@ -133,7 +134,7 @@ def load_saved_workspace(main_window: 'MainWindow', data_filename: str|bool = Fa
         common_widget_actions.create_and_show_messagebox(
             main_window,
             "Load Failed",
-            f"Could not load the workspace file:\n{exc}",
+            f"{i18n.tr('Could not load the workspace file:')}\n{exc}",
             main_window,
         )
 

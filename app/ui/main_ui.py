@@ -313,7 +313,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             common_widget_actions.create_and_show_messagebox(
                 self,
                 "Missing Files",
-                "Some required files are missing:\n\n" + "\n".join(missing),
+                i18n.tr("Some required files are missing:") + "\n\n" + "\n".join(missing),
                 self,
             )
             return

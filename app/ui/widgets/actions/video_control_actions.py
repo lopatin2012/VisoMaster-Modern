@@ -11,6 +11,7 @@ from PySide6 import QtGui,QtWidgets,QtCore
 if TYPE_CHECKING:
     from app.ui.main_ui import MainWindow
 import app.helpers.miscellaneous as misc_helpers
+from app.helpers import i18n
 from app.ui.widgets.actions import common_actions as common_widget_actions
 from app.ui.widgets.actions import graphics_view_actions
 import app.ui.widgets.actions.layout_actions as layout_actions
@@ -478,7 +479,7 @@ def save_current_frame_to_file(main_window: 'MainWindow'):
         if save_filename:
             pil_image = Image.fromarray(frame[..., ::-1])
             pil_image.save(save_filename, 'PNG')
-            common_widget_actions.create_and_show_toast_message(main_window, 'Image Saved', f'Saved Current Image to file: {save_filename}')
+            common_widget_actions.create_and_show_toast_message(main_window, i18n.tr('Image Saved'), f"{i18n.tr('Saved Current Image to file:')} {save_filename}")
 
     else:
         common_widget_actions.create_and_show_messagebox(main_window, 'Invalid Frame', 'Cannot save the current frame!', parent_widget=main_window.saveImageButton)

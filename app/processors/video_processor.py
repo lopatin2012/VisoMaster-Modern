@@ -281,7 +281,7 @@ class VideoProcessor(QObject):
             else:
                 logger.error("Cannot read frame! %s", self.current_frame_number)
                 self.stop_processing()
-                self.main_window.display_messagebox_signal.emit('Error Reading Frame', f'Error Reading Frame {self.current_frame_number}.\n Stopped Processing...!', self.main_window)
+                self.main_window.display_messagebox_signal.emit(i18n.tr('Error Reading Frame'), f"{i18n.tr('Error reading frame')} {self.current_frame_number}.\n{i18n.tr('Stopped processing.')}", self.main_window)
 
     def start_frame_worker(self, frame_number, frame, is_single_frame=False):
         """Start a FrameWorker to process the given frame."""
@@ -309,7 +309,7 @@ class VideoProcessor(QObject):
                 self.media_capture.set(cv2.CAP_PROP_POS_FRAMES, self.current_frame_number)
             else:
                 logger.error("Cannot read frame! %s", self.current_frame_number)
-                self.main_window.display_messagebox_signal.emit('Error Reading Frame', f'Error Reading Frame {self.current_frame_number}.', self.main_window)
+                self.main_window.display_messagebox_signal.emit(i18n.tr('Error Reading Frame'), f"{i18n.tr('Error reading frame')} {self.current_frame_number}.", self.main_window)
 
         # """Process a single image frame directly without queuing."""
         elif self.file_type == 'image':
