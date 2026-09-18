@@ -1,3 +1,9 @@
+/* Compact sizing: qfluentwidgets defaults to a 14px font, which is too large for
+   this compact layout and truncates labels/values. 12px matches the Qt default. */
+QWidget {
+    font-size: 12px;
+}
+
 QPushButton {
     color: #379bb9;
     font-weight: bold;

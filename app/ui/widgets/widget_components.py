@@ -1189,7 +1189,7 @@ class ParameterDecimalSlider(qfw.Slider, ParametersWidget):
 
 
 class ParameterLineEdit(qfw.LineEdit):
-    def __init__(self, min_value: int, max_value: int, default_value: str, fixed_width: int = 38, max_length: int = 3, alignment: int = 1, *args, **kwargs):
+    def __init__(self, min_value: int, max_value: int, default_value: str, fixed_width: int = 46, max_length: int = 3, alignment: int = 1, *args, **kwargs):
         super().__init__(kwargs.get('parent', None))
         self.setFixedWidth(fixed_width)  # Make the line edit narrower
         self.setMaxLength(max_length)
