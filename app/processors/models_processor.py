@@ -144,9 +144,13 @@ class ModelsProcessor(QtCore.QObject):
     def load_model(self, model_name, session_options=None):
         with self.model_lock:
             self.main_window.model_loading_signal.emit()
-            # QApplication.processEvents()
-            # if not is_file_exists(self.models_path[model_name]):
-            #     download_file(model_name, self.models_path[model_name], self.models_data[model_name]['hash'], self.models_data[model_name]['url'])
+            if not is_file_exists(self.models_path[model_name]):
+                logger.error("Model file not found: %s", self.models_path[model_name])
+                self.main_window.model_loaded_signal.emit()
+                raise FileNotFoundError(
+                    f"Model file not found: {self.models_path[model_name]}. "
+                    "Run download_models.py to download the models."
+                )
             if session_options is None:
                 model_instance = onnxruntime.InferenceSession(self.models_path[model_name], providers=self.providers)
             else:

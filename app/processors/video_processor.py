@@ -1,3 +1,4 @@
+import logging
 import threading
 import queue
 from typing import TYPE_CHECKING, Dict, Tuple
@@ -22,7 +23,9 @@ from app.ui.widgets.actions import common_actions as common_widget_actions
 from app.ui.widgets.actions import video_control_actions
 from app.ui.widgets.actions import layout_actions
 import app.helpers.miscellaneous as misc_helpers
-from app.helpers import perf
+from app.helpers import perf, i18n
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from app.ui.main_ui import MainWindow
@@ -469,8 +472,13 @@ class VideoProcessor(QObject):
                 # self.virtcam = pyvirtualcam.Camera(width=vid_width, height=vid_height, fps=int(self.fps), backend='unitycapture', device='Unity Video Capture')
                 self.virtcam = pyvirtualcam.Camera(width=frame_width, height=frame_height, fps=int(self.fps), backend=backend, fmt=pyvirtualcam.PixelFormat.BGR)
 
-            except Exception as e:
-                print(e)
+            except Exception as e:  # pylint: disable=broad-exception-caught
+                logger.exception("Failed to enable virtual camera")
+                self.main_window.display_messagebox_signal.emit(
+                    i18n.tr("Virtual Camera Error"),
+                    f"{i18n.tr('Could not start the virtual camera. Make sure OBS (or another virtual camera) is installed and running.')}\n\n{e}",
+                    self.main_window,
+                )
 
     def disable_virtualcam(self):
         if self.virtcam:

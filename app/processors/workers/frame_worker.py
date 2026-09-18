@@ -16,7 +16,7 @@ from app.processors.utils import faceutil
 import app.ui.widgets.actions.common_actions as common_widget_actions
 from app.ui.widgets.actions import video_control_actions
 from app.helpers.miscellaneous import t512,t384,t256,t128, ParametersDict
-from app.helpers import perf
+from app.helpers import perf, i18n
 
 if TYPE_CHECKING:
     from app.ui.main_ui import MainWindow
@@ -88,14 +88,14 @@ class FrameWorker(threading.Thread):
             if self.video_processor.frame_queue.empty() and not self.video_processor.processing and self.video_processor.next_frame_to_display >= self.video_processor.max_frame_number:
                 self.video_processor.stop_processing()
 
-        except Exception:  # pylint: disable=broad-exception-caught
+        except Exception as exc:  # pylint: disable=broad-exception-caught
             logger.exception("Error while processing frame %s", self.frame_number)
             # Report once per run instead of spamming a dialog for every frame.
             if not getattr(self.video_processor, "error_reported", False):
                 self.video_processor.error_reported = True
                 self.main_window.display_messagebox_signal.emit(
-                    "Processing Error",
-                    "An error occurred while processing a frame. See visomaster.log for details.",
+                    i18n.tr("Processing Error"),
+                    f"{i18n.tr('An error occurred while processing a frame. See visomaster.log for details.')}\n\n{exc}",
                     self.main_window,
                 )
     

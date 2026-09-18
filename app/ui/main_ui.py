@@ -27,6 +27,7 @@ from app.ui.widgets.settings_layout_data import SETTINGS_LAYOUT_DATA
 from app.ui.widgets.face_editor_layout_data import FACE_EDITOR_LAYOUT_DATA
 from app.helpers.miscellaneous import DFM_MODELS_DATA, ParametersDict
 from app.helpers import i18n
+from app.helpers import asset_check
 from app.version import APP_NAME, APP_VERSION
 from app.helpers.typing_helper import FacesParametersTypes, ParametersTypes, ControlTypes, MarkerTypes
 
@@ -288,6 +289,25 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         if Path('last_workspace.json').is_file():
             load_dialog = widget_components.LoadLastWorkspaceDialog(self)
             load_dialog.exec_()
+        self._check_assets()
+
+    def _check_assets(self):
+        missing = asset_check.find_missing_support_files()
+        if missing:
+            common_widget_actions.create_and_show_messagebox(
+                self,
+                "Missing Files",
+                "Some required files are missing:\n\n" + "\n".join(missing),
+                self,
+            )
+            return
+        if not asset_check.has_any_model():
+            common_widget_actions.create_and_show_messagebox(
+                self,
+                "Models Not Found",
+                "No models were found in model_assets/.\nRun download_models.py to download them.",
+                self,
+            )
 
     def save_last_workspace(self):
         pass

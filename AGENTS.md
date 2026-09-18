@@ -21,6 +21,7 @@ VisoMaster-Modern: fork of VisoMaster, a PySide6 desktop app for AI face swappin
 - `main.py --profile` (or `VISOMASTER_PROFILE=1`) enables the opt-in per-stage profiler in `app/helpers/perf.py`; it wraps model methods plus preview/display and prints averages every 60 frames and on stop. No-op when disabled.
 - Measured on an RTX 5070 Ti: the TensorRT EP was **not** faster than CUDA EP for the bundled models and builds engines for minutes, so CUDA stays the default (`trt_fp16_enable` is set for opt-in TRT). Batching is not possible: Inswapper is `batch=1` and ArcFace output is fixed `(1,512)`. `h264_nvenc` is auto-selected for recording.
 - Avoid per-frame `torch.cuda.empty_cache()` / `nvidia-smi` polling on hot paths (removed from the display path).
+- Errors are logged to a rotating `visomaster.log` via `app/helpers/logging_setup.py` (initialised first thing in `main.py`); uncaught exceptions get excepthooks, and frame/virtual-camera errors also surface as dialogs. `app/helpers/asset_check.py` warns at startup about missing support files / no models.
 
 ## UI / theming
 - Parameter/control widgets live in `app/ui/widgets/widget_components.py` and subclass **qfluentwidgets** (`SwitchButton`, `ComboBox`, `Slider`, `LineEdit`, `ToolButton`). They must keep the legacy APIs that `layout_actions.py` and `show_hide_related_widgets` rely on: `toggled` signal, `set_value`, `reset_to_default_value`, `line_edit`, `reset_default_button`, `label_widget`, `group_layout_data`, `start_animation`.
