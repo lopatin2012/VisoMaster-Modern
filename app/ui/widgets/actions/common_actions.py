@@ -6,6 +6,7 @@ from functools import partial
 import cv2
 import numpy as np
 from pyqttoast import Toast, ToastPreset, ToastPosition
+from qfluentwidgets import MessageBox
 from PySide6 import QtWidgets,QtCore,QtGui
 
 from app.ui.widgets import widget_components
@@ -17,12 +18,11 @@ if TYPE_CHECKING:
     
 @QtCore.Slot(str, str, QtWidgets.QWidget)
 def create_and_show_messagebox(main_window: 'MainWindow', window_title: str, message: str, parent_widget: QtWidgets.QWidget):
-    messagebox = QtWidgets.QMessageBox(parent_widget)
-    messagebox.setWindowTitle(i18n.tr(window_title))
-    messagebox.setWindowIcon(QtGui.QIcon(u":/media/media/visomaster_small.png"))
-
-    messagebox.setText(i18n.tr(message))
-    messagebox.exec_()
+    parent = parent_widget.window() if parent_widget is not None else main_window
+    messagebox = MessageBox(i18n.tr(window_title), i18n.tr(message), parent)
+    messagebox.yesButton.setText(i18n.tr("OK"))
+    messagebox.cancelButton.hide()
+    messagebox.exec()
 
 def create_and_show_toast_message(main_window: 'MainWindow', title: str, message: str, style_type='information'):
     style_preset_map = {

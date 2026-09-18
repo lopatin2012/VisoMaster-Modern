@@ -217,7 +217,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self._restore_window_geometry()
         self.initialize_variables()
         self.initialize_widgets()
-        self.load_last_workspace()
+        # Defer until after the window is shown so the fluent dialog has a visible parent.
+        QtCore.QTimer.singleShot(0, self.load_last_workspace)
 
     def resizeEvent(self, event: QtGui.QResizeEvent):
         # print("Called resizeEvent()")

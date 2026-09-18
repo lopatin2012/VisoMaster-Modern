@@ -722,22 +722,25 @@ class CreateEmbeddingDialog(QtWidgets.QDialog):
         self.main_window = main_window
         self.embedding_name = ''
         self.merge_type = ''
-        self.setWindowTitle("Create Embedding")
+        self.setWindowTitle(i18n.tr("Create Embedding"))
         self.setWindowIcon(QtGui.QIcon(u":/media/media/visomaster_small.png"))
 
         # Create widgets
-        self.embed_name_edit = QtWidgets.QLineEdit(self)
-        self.embed_name_edit.setPlaceholderText("Enter embedding name")
+        self.embed_name_edit = qfw.LineEdit(self)
+        self.embed_name_edit.setPlaceholderText(i18n.tr("Enter embedding name"))
 
-        self.merge_type_selection = QtWidgets.QComboBox(self)
+        self.merge_type_selection = qfw.ComboBox(self)
         self.merge_type_selection.addItems(['Mean', 'Median'])
         self.merge_type_selection.setCurrentText(main_window.control['EmbMergeMethodSelection'])
 
-        # Create button box
-        QBtn = QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel
-        self.buttonBox = QtWidgets.QDialogButtonBox(QBtn)
-        self.buttonBox.accepted.connect(self.create_embedding)
-        self.buttonBox.rejected.connect(self.reject)
+        # Buttons
+        self.cancel_button = qfw.PushButton(i18n.tr("Cancel"), self)
+        self.ok_button = qfw.PrimaryPushButton(i18n.tr("Create"), self)
+        self.ok_button.clicked.connect(self.create_embedding)
+        self.cancel_button.clicked.connect(self.reject)
+        button_layout = QtWidgets.QHBoxLayout()
+        button_layout.addWidget(self.cancel_button)
+        button_layout.addWidget(self.ok_button)
 
         # Create layout and add widgets
         layout = QtWidgets.QVBoxLayout()
@@ -745,7 +748,7 @@ class CreateEmbeddingDialog(QtWidgets.QDialog):
         layout.addWidget(self.embed_name_edit)
         layout.addWidget(QtWidgets.QLabel(i18n.tr("Merge Type:")))
         layout.addWidget(self.merge_type_selection)
-        layout.addWidget(self.buttonBox)
+        layout.addLayout(button_layout)
 
         # Set dialog layout
         self.setLayout(layout)
@@ -788,7 +791,7 @@ class CreateEmbeddingDialog(QtWidgets.QDialog):
 class LoadingDialog(QtWidgets.QDialog):
     def __init__(self, message="Loading Models, please wait...\nDon't panic if it looks stuck!"):
         super().__init__()
-        self.setWindowTitle("Loading Models")
+        self.setWindowTitle(i18n.tr("Loading Models"))
         self.setWindowIcon(QtGui.QIcon(u":/media/media/visomaster_small.png"))
         self.setWindowFlag(QtCore.Qt.WindowCloseButtonHint, False)
         self.setModal(True)  # Block interaction with other windows
@@ -828,30 +831,21 @@ class LoadingDialog(QtWidgets.QDialog):
 class ProgressDialog(QtWidgets.QProgressDialog):
     pass
 
-class LoadLastWorkspaceDialog(QtWidgets.QDialog):
+class LoadLastWorkspaceDialog(qfw.MessageBox):
     def __init__(self, main_window: 'MainWindow',):
-        super().__init__()
+        super().__init__(
+            i18n.tr("Load Last Workspace"),
+            i18n.tr("Do you want to load your last workspace?"),
+            main_window,
+        )
         self.main_window = main_window
-        self.setWindowTitle("Load Last Workspace")
-        self.setWindowIcon(QtGui.QIcon(u":/media/media/visomaster_small.png"))
-
-        # Create button box
-        QBtn = QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel
-        self.buttonBox = QtWidgets.QDialogButtonBox(QBtn)
-        self.buttonBox.accepted.connect(self.load_workspace)
-        self.buttonBox.rejected.connect(self.reject)
-
-        # Create layout and add widgets
-        layout = QtWidgets.QVBoxLayout()
-        layout.addWidget(QtWidgets.QLabel(i18n.tr("Do you want to load your last workspace?")))
-        layout.addWidget(self.buttonBox)
-
-        # Set dialog layout
-        self.setLayout(layout)
+        self.yesButton.setText(i18n.tr("Yes"))
+        self.cancelButton.setText(i18n.tr("No"))
+        self.cancelButton.show()
+        self.yesSignal.connect(self.load_workspace)
 
     def load_workspace(self):
-        self.accept()
-        save_load_actions.load_saved_workspace(self.main_window, 'last_workspace.json')    
+        save_load_actions.load_saved_workspace(self.main_window, 'last_workspace.json')
 
 class ParametersWidget:
     def __init__(self, *args, **kwargs):

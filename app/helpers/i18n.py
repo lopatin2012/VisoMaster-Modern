@@ -588,6 +588,15 @@ TRANSLATIONS = {
         "Winking eye.": "Подмигивание.",
 
         # Dialogs / messages
+        "OK": "ОК",
+        "Cancel": "Отмена",
+        "Yes": "Да",
+        "No": "Нет",
+        "Create": "Создать",
+        "Create Embedding": "Создать эмбеддинг",
+        "Enter embedding name": "Введите имя эмбеддинга",
+        "Load Last Workspace": "Загрузить последнюю сессию",
+        "Loading Models": "Загрузка моделей",
         "Do you want to load your last workspace?": "Загрузить последнюю сессию?",
         "Loading Models, please wait...\nDon't panic if it looks stuck!": "Загрузка моделей, подождите...\nНе паникуйте, если кажется, что зависло!",
         "Embedding Name:": "Имя эмбеддинга:",
