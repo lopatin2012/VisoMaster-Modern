@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Dict
 
 from PySide6 import QtWidgets, QtGui, QtCore
 from PySide6.QtWidgets import QPushButton
+import qfluentwidgets as qfw
 import cv2
 import numpy as np
 
@@ -865,9 +866,9 @@ class ParametersWidget:
         self.reset_default_button: QPushButton = False
         self.enable_refresh_frame = True #This flag can be used to temporarily disable refreshing the frame when the widget value is changed
 
-class SelectionBox(QtWidgets.QComboBox, ParametersWidget):
+class SelectionBox(qfw.ComboBox, ParametersWidget):
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__(kwargs.get('parent', None))
         ParametersWidget.__init__(self, *args, **kwargs)
         self.selection_values = kwargs.get('selection_values', [])
         self.currentTextChanged.connect(partial(common_widget_actions.show_hide_related_widgets, self.main_window, self, self.widget_name, ))
@@ -887,80 +888,36 @@ class SelectionBox(QtWidgets.QComboBox, ParametersWidget):
         else:
             self.setCurrentText(value)
     
-class ToggleButton(QtWidgets.QPushButton, ParametersWidget):
-    _circle_position = None
+class ToggleButton(qfw.SwitchButton, ParametersWidget):
+    # qfluentwidgets' SwitchButton exposes `checkedChanged`; keep the old `toggled`
+    # signal so existing wiring (layout_actions, show_hide_related_widgets) is unchanged.
+    toggled = QtCore.Signal(bool)
 
-    def __init__(self, bg_color="#000000", circle_color="#ffffff", active_color="#4facc9", default_value=False, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, *args, **kwargs):
+        super().__init__(kwargs.get('parent', None))
         ParametersWidget.__init__(self, *args, **kwargs)
 
-        self.setFixedSize(30, 15)
-        self.setCursor(QtCore.Qt.PointingHandCursor)
-        self.setCheckable(True)
-        
-        self._bg_color = bg_color
-        self._circle_color = circle_color
-        self._active_color = active_color
-        self.default_value = bool(default_value)
-        self._circle_position = 1  # Start position of the circle
-        self.animation_curve = QtCore.QEasingCurve.OutCubic
-        
-        # Animation
-        self.animation = QtCore.QPropertyAnimation(self, b"circle_position", self)
-        self.animation.setDuration(300)  # Animation duration in milliseconds
-        self.animation.setEasingCurve(self.animation_curve)
-        
-        self.toggled.connect(partial(common_widget_actions.show_hide_related_widgets, self.main_window, self, self.widget_name, None))
-        
-    # Property for animation
-    @QtCore.Property(int)
-    def circle_position(self):
-        return self._circle_position
+        self.setCursor(QtCore.Qt.CursorShape.PointingHandCursor)
+        self.default_value = bool(kwargs.get('default_value', False))
 
-    @circle_position.setter
-    def circle_position(self, pos):
-        self._circle_position = pos
-        self.update()  # Update the widget to trigger paintEvent
-
+        # Re-emit qfw's signal under the legacy name.
+        self.checkedChanged.connect(self.toggled.emit)
+        self.checkedChanged.connect(partial(common_widget_actions.show_hide_related_widgets, self.main_window, self, self.widget_name, None))
+        
     def start_animation(self):
-        # Animate circle position when toggled
-        start_pos = 1 if self.isChecked() else 15
-        end_pos = 15 if self.isChecked() else 1
-        
-        self.animation.setStartValue(start_pos)
-        self.animation.setEndValue(end_pos)
-        self.animation.start()
-
-    def paintEvent(self, e):
-        p = QtGui.QPainter(self)
-        p.setRenderHint(QtGui.QPainter.Antialiasing)
-        p.setPen(QtCore.Qt.NoPen)
-        
-        rect = QtCore.QRect(0, 0, self.width(), self.height())
-        
-        if self.isChecked():
-            p.setBrush(QtGui.QColor(self._active_color))
-            p.drawRoundedRect(0, 0, rect.width(), self.height(), self.height() / 2, self.height() / 2)
-        else:
-            p.setBrush(QtGui.QColor(self._bg_color))
-            p.drawRoundedRect(0, 0, rect.width(), self.height(), self.height() / 2, self.height() / 2)
-        
-        # Draw the circle at the animated position
-        p.setBrush(QtGui.QColor(self._circle_color))
-        p.drawEllipse(self._circle_position, 1, 13, 13)
-        
-        p.end()
+        # SwitchButton animates itself; kept for API compatibility.
+        pass
 
     def reset_to_default_value(self):
         self.setChecked(bool(self.default_value))
 
     # Custom method in all parameter widgets to set value
     def set_value(self, value):
-        self.setChecked(value)
+        self.setChecked(bool(value))
 
-class ParameterSlider(QtWidgets.QSlider, ParametersWidget):
+class ParameterSlider(qfw.Slider, ParametersWidget):
     def __init__(self, min_value=0, max_value=0, default_value=0, step_size=1, fixed_width = 130, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__(kwargs.get('parent', None))
         ParametersWidget.__init__(self, *args, **kwargs)
         self.min_value = int(min_value)
         self.max_value = int(max_value)
@@ -1082,9 +1039,9 @@ class ParameterSlider(QtWidgets.QSlider, ParametersWidget):
         return round(new_position / self.step_size) * self.step_size
 
     
-class ParameterDecimalSlider(QtWidgets.QSlider, ParametersWidget):
+class ParameterDecimalSlider(qfw.Slider, ParametersWidget):
     def __init__(self, min_value=0.0, max_value=1.0, default_value=0.00, decimals=2, step_size=0.01, fixed_width = 130, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__(kwargs.get('parent', None))
         ParametersWidget.__init__(self, *args, **kwargs)
 
         # Ensure min, max, and default are floats
@@ -1231,9 +1188,9 @@ class ParameterDecimalSlider(QtWidgets.QSlider, ParametersWidget):
         return round(new_value, self.decimals)
 
 
-class ParameterLineEdit(QtWidgets.QLineEdit):
+class ParameterLineEdit(qfw.LineEdit):
     def __init__(self, min_value: int, max_value: int, default_value: str, fixed_width: int = 38, max_length: int = 3, alignment: int = 1, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__(kwargs.get('parent', None))
         self.setFixedWidth(fixed_width)  # Make the line edit narrower
         self.setMaxLength(max_length)
         self.setValidator(QtGui.QIntValidator(min_value, max_value))  # Restrict input to numbers
@@ -1252,9 +1209,9 @@ class ParameterLineEdit(QtWidgets.QLineEdit):
         """Set the line edit's value."""
         self.setText(str(value))
 
-class ParameterLineDecimalEdit(QtWidgets.QLineEdit):
+class ParameterLineDecimalEdit(qfw.LineEdit):
     def __init__(self, min_value: float, max_value: float, default_value: str, decimals: int = 2, step_size=0.01, fixed_width: int = 38, max_length: int = 5, alignment: int = 1, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__(kwargs.get('parent', None))
         self.setFixedWidth(fixed_width)  # Adjust the width for decimal numbers
         self.decimals = decimals
         self.step_size = step_size
@@ -1295,9 +1252,9 @@ class ParameterLineDecimalEdit(QtWidgets.QLineEdit):
         """Get the current value from the line edit."""
         return float(self.text())
 
-class ParameterText(QtWidgets.QLineEdit, ParametersWidget):
+class ParameterText(qfw.LineEdit, ParametersWidget):
     def __init__(self, default_value: str, fixed_width: int = 130, max_length: int = 500, alignment: int = 0, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__(kwargs.get('parent', None))
         ParametersWidget.__init__(self, *args, **kwargs)
         self.data_type = kwargs.get('data_type')
         self.exec_function = kwargs.get('exec_function')
@@ -1338,9 +1295,9 @@ class ParameterText(QtWidgets.QLineEdit, ParametersWidget):
 
     def set_value(self, value):
         self.setText(value)
-class ParameterResetDefaultButton(QtWidgets.QPushButton):
+class ParameterResetDefaultButton(qfw.ToolButton):
     def __init__(self, related_widget: ParameterSlider | ParameterDecimalSlider | SelectionBox, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__(kwargs.get('parent', None))
         self.related_widget = related_widget
         button_icon = QtGui.QIcon(QtGui.QPixmap(':/media/media/reset_default.png'))
         self.setIcon(button_icon)

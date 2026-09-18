@@ -14,6 +14,7 @@ onnxruntime-gpu==1.23.2
 
 # UI
 PySide6==6.10.3
+PySide6-Fluent-Widgets==1.11.3
 
 # Torch stack (CUDA 12.9)
 torch==2.8.0+cu129

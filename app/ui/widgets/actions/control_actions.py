@@ -7,6 +7,7 @@ import qdarktheme
 if TYPE_CHECKING:
     from app.ui.main_ui import MainWindow
 from app.ui.widgets.actions import common_actions as common_widget_actions
+from app.ui.styles.fluent_theme import apply_fluent_theme
 
 #'''
 #    Define functions here that has to be executed when value of a control widget (In the settings tab) is changed.
@@ -46,6 +47,8 @@ def change_theme(main_window: 'MainWindow', new_theme):
         _style = get_style_data('dark_styles.qss', 'dark',) + qdarkstyle.load_stylesheet() # Applica lo stile dark-blue 
 
     app.setStyleSheet(_style)
+
+    apply_fluent_theme(new_theme)
 
     main_window.update()  # Aggiorna la finestra principale
 

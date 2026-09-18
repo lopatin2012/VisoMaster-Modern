@@ -16,6 +16,11 @@ VisoMaster-Modern: fork of VisoMaster, a PySide6 desktop app for AI face swappin
 ## Verify
 - No tests, no headless mode. Verify changes by running the app (`.venv\Scripts\python.exe main.py` from the repo root). Do not invent test/lint commands.
 
+## UI / theming
+- Parameter/control widgets live in `app/ui/widgets/widget_components.py` and subclass **qfluentwidgets** (`SwitchButton`, `ComboBox`, `Slider`, `LineEdit`, `ToolButton`). They must keep the legacy APIs that `layout_actions.py` and `show_hide_related_widgets` rely on: `toggled` signal, `set_value`, `reset_to_default_value`, `line_edit`, `reset_default_button`, `label_widget`, `group_layout_data`, `start_animation`.
+- qfw quirks: `SwitchButton` emits `checkedChanged` (not `toggled`) and is not a `QPushButton`; `ComboBox` is `QPushButton`-based, not a `QComboBox`; all qfw constructors are `(parent=None)` and reject stray kwargs — pass `kwargs.get('parent')` explicitly.
+- Theme: `app/ui/styles/fluent_theme.py` sets the qfw theme/accent. `main.py` and `control_actions.change_theme` still apply `qdarktheme` + `app/ui/styles/{dark,light}_styles.qss` for the standard Qt widgets that qfw doesn't replace (docks, tabs, lists, menus).
+
 ## Generated UI files - do not hand-edit
 - `app/ui/core/main_window.py` comes from `MainWindow.ui`, and `app/ui/core/media_rc.py` from `media.qrc`.
 - Regenerate with `app/ui/core/convert_ui_to_py.bat` (`pyside6-uic` + `pyside6-rcc`, then fixes an import). `Start.bat` reruns this on every launch.
