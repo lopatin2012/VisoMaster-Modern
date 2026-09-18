@@ -9,6 +9,13 @@ import qdarktheme
 from app.ui.core.proxy_style import ProxyStyle
 from app.ui.styles.fluent_theme import apply_fluent_theme
 
+# Inference-only performance defaults (fixed shapes, no autograd needed).
+torch.backends.cudnn.benchmark = True
+torch.backends.cuda.matmul.allow_tf32 = True
+torch.backends.cudnn.allow_tf32 = True
+torch.set_float32_matmul_precision("high")
+torch.set_grad_enabled(False)
+
 if __name__=="__main__":
 
     app = QtWidgets.QApplication(sys.argv)

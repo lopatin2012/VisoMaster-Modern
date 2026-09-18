@@ -60,6 +60,7 @@ class ModelsProcessor(QtCore.QObject):
             'trt_ep_context_file_path': "tensorrt-engines",
             'trt_layer_norm_fp32_fallback': True,
             'trt_builder_optimization_level': 5,
+            'trt_fp16_enable': True,
         }
         self.providers = [
             ('CUDAExecutionProvider'),

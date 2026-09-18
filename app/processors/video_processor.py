@@ -99,9 +99,9 @@ class VideoProcessor(QObject):
         else:
             graphics_view_actions.update_graphics_view(self.main_window, pixmap, frame_number,)
         self.current_frame = frame
-        torch.cuda.empty_cache()
-        #Set GPU Memory Progressbar
-        common_widget_actions.update_gpu_memory_progressbar(self.main_window)
+        # Hot path (per single frame / seek): do NOT call torch.cuda.empty_cache() or
+        # poll nvidia-smi here — both are very expensive. The 5s gpu_memory_update_timer
+        # keeps the VRAM bar fresh during playback.
     def display_next_frame(self):
         if not self.processing or (self.next_frame_to_display > self.max_frame_number):
             self.stop_processing()
