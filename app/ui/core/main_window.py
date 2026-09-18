@@ -30,7 +30,7 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(1376, 585)
+        MainWindow.resize(1476, 585)
         font = QFont()
         font.setPointSize(10)
         MainWindow.setFont(font)
@@ -653,7 +653,7 @@ class Ui_MainWindow(object):
         MainWindow.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.controlOptionsDockWidget)
         self.topMenuBar = QMenuBar(MainWindow)
         self.topMenuBar.setObjectName(u"topMenuBar")
-        self.topMenuBar.setGeometry(QRect(0, 0, 1376, 33))
+        self.topMenuBar.setGeometry(QRect(0, 0, 1476, 33))
         self.menuFile = QMenu(self.topMenuBar)
         self.menuFile.setObjectName(u"menuFile")
         self.menuEdit = QMenu(self.topMenuBar)
