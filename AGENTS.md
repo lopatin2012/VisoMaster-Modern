@@ -30,7 +30,8 @@ VisoMaster-Modern: fork of VisoMaster, a PySide6 desktop app for AI face swappin
 - `app/helpers/i18n.py` holds a dict-based i18n: English source strings are the keys, `tr()` looks them up for the current language, saved via `QSettings`.
 - Translation is applied in three places: `main_ui` loads/applies at startup, `layout_actions` uses `i18n.set_widget_text/set_widget_tooltip` for LAYOUT_DATA labels/help/group titles, and `control_actions.change_language` re-applies live (widgets keep the English source in the `_i18n_src`/`_i18n_tip` properties so switching back works).
 - Never translate dropdown `options` — they are functional values compared in code (models, `Dark/Light`, `Opal/Pearl/Optimal`, ...). Translate only `label`/`help`, `.ui` strings and user-facing messages.
-- To localize a new string: wrap it with `i18n.tr(...)` (or `set_widget_text`) and add an entry to `TRANSLATIONS` in `i18n.py`. `README.ru.md` mirrors `README.md`.
+- To localize a new string: wrap it with `i18n.tr(...)` (or `set_widget_text`) and add an entry to `TRANSLATIONS` in `i18n.py` (`ru` inline, `zh` in `app/helpers/i18n_zh.py`). `README.ru.md` mirrors `README.md`.
+- Add a language by appending to `LANGUAGES` and registering its dict in `TRANSLATIONS` (`TRANSLATIONS["<code>"] = ...`); map non-standard Qt locales in `_QT_LOCALE` (e.g. `zh` -> `zh_CN`).
 - Theme and Language are selected from the **top menu bar** (`Settings` menu built by `layout_actions.set_up_settings_menu`), not the Settings tab. The menu syncs on `aboutToShow`; use `control_actions.set_theme_from_menu`/`change_language`.
 
 ## Generated UI files - do not hand-edit

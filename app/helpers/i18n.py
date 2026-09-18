@@ -10,9 +10,12 @@ Widget helpers store the original English source on the widget (dynamic property
 
 from PySide6 import QtCore, QtGui, QtWidgets
 
-LANGUAGES = [("en", "English"), ("ru", "Русский")]
+LANGUAGES = [("en", "English"), ("ru", "Русский"), ("zh", "中文")]
 _DEFAULT = "en"
 _current = _DEFAULT
+
+# App language code -> Qt locale name used by the bundled .qm files.
+_QT_LOCALE = {"zh": "zh_CN"}
 
 _SETTINGS = QtCore.QSettings("VisoMaster-Modern", "VisoMaster-Modern")
 _qt_translator = None
@@ -66,10 +69,11 @@ def install_qt_translations(app, language_code: str) -> None:
         _qt_translator = None
     if not language_code or language_code == "en":
         return
+    qt_locale = _QT_LOCALE.get(language_code, language_code)
     translations_path = QtCore.QLibraryInfo.path(QtCore.QLibraryInfo.LibraryPath.TranslationsPath)
     translator = QtCore.QTranslator()
-    if translator.load(f"qtbase_{language_code}", translations_path) or \
-            translator.load(f"qt_{language_code}", translations_path):
+    if translator.load(f"qtbase_{qt_locale}", translations_path) or \
+            translator.load(f"qt_{qt_locale}", translations_path):
         app.installTranslator(translator)
         _qt_translator = translator
 
@@ -629,3 +633,8 @@ TRANSLATIONS = {
         "You need to select at least one face to create a merged embedding!": "Выберите хотя бы одно лицо для создания объединённого эмбеддинга!",
     }
 }
+
+# Additional languages live in separate modules to keep this file readable.
+from app.helpers.i18n_zh import ZH  # noqa: E402
+
+TRANSLATIONS["zh"] = ZH
