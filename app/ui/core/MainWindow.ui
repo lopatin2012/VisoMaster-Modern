@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <ui version="4.0">
  <class>MainWindow</class>
  <widget class="QMainWindow" name="MainWindow">
@@ -36,7 +36,7 @@
        <item>
         <layout class="QHBoxLayout" name="panelVisibilityCheckBoxLayout">
          <item>
-          <widget class="QCheckBox" name="mediaPanelCheckBox">
+          <widget class="CheckBox" name="mediaPanelCheckBox">
            <property name="text">
             <string>Media Panel</string>
            </property>
@@ -46,7 +46,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QCheckBox" name="facesPanelCheckBox">
+          <widget class="CheckBox" name="facesPanelCheckBox">
            <property name="text">
             <string>Faces Panel</string>
            </property>
@@ -56,7 +56,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QCheckBox" name="parametersPanelCheckBox">
+          <widget class="CheckBox" name="parametersPanelCheckBox">
            <property name="text">
             <string>Parameters Panel</string>
            </property>
@@ -79,14 +79,14 @@
           </spacer>
          </item>
          <item>
-          <widget class="QCheckBox" name="faceCompareCheckBox">
+          <widget class="CheckBox" name="faceCompareCheckBox">
            <property name="text">
             <string>VIew Face Compare</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QCheckBox" name="faceMaskCheckBox">
+          <widget class="CheckBox" name="faceMaskCheckBox">
            <property name="text">
             <string>View Face Mask</string>
            </property>
@@ -95,21 +95,21 @@
         </layout>
        </item>
        <item>
-        <widget class="QGraphicsView" name="graphicsViewFrame"/>
+        <widget class="QGraphicsView" name="graphicsViewFrame" />
        </item>
        <item>
         <layout class="QVBoxLayout" name="verticalLayoutMediaControls">
          <item>
           <layout class="QHBoxLayout" name="horizontalLayoutMediaSlider">
            <item>
-            <widget class="QSlider" name="videoSeekSlider">
+            <widget class="Slider" name="videoSeekSlider">
              <property name="orientation">
               <enum>Qt::Orientation::Horizontal</enum>
              </property>
             </widget>
            </item>
            <item>
-            <widget class="QLineEdit" name="videoSeekLineEdit">
+            <widget class="LineEdit" name="videoSeekLineEdit">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                <horstretch>0</horstretch>
@@ -151,7 +151,7 @@
             </spacer>
            </item>
            <item>
-            <widget class="QPushButton" name="frameRewindButton">
+            <widget class="TransparentToolButton" name="frameRewindButton">
              <property name="sizePolicy">
               <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
                <horstretch>0</horstretch>
@@ -165,16 +165,13 @@
               </size>
              </property>
              <property name="text">
-              <string/>
+              <string />
              </property>
              <property name="icon">
               <iconset resource="media.qrc">
                <normaloff>:/media/media/previous_marker_off.png</normaloff>:/media/media/previous_marker_off.png</iconset>
              </property>
-             <property name="flat">
-              <bool>true</bool>
-             </property>
-            </widget>
+             </widget>
            </item>
            <item>
             <spacer name="horizontalSpacer_3">
@@ -193,9 +190,9 @@
             </spacer>
            </item>
            <item>
-            <widget class="QPushButton" name="buttonMediaRecord">
+            <widget class="TransparentToolButton" name="buttonMediaRecord">
              <property name="text">
-              <string/>
+              <string />
              </property>
              <property name="icon">
               <iconset resource="media.qrc">
@@ -204,10 +201,7 @@
              <property name="checkable">
               <bool>true</bool>
              </property>
-             <property name="flat">
-              <bool>true</bool>
-             </property>
-            </widget>
+             </widget>
            </item>
            <item>
             <spacer name="horizontalSpacer_6">
@@ -226,7 +220,7 @@
             </spacer>
            </item>
            <item>
-            <widget class="QPushButton" name="buttonMediaPlay">
+            <widget class="TransparentToolButton" name="buttonMediaPlay">
              <property name="sizePolicy">
               <sizepolicy hsizetype="MinimumExpanding" vsizetype="Minimum">
                <horstretch>0</horstretch>
@@ -240,7 +234,7 @@
               </size>
              </property>
              <property name="text">
-              <string/>
+              <string />
              </property>
              <property name="icon">
               <iconset resource="media.qrc">
@@ -249,10 +243,7 @@
              <property name="checkable">
               <bool>true</bool>
              </property>
-             <property name="flat">
-              <bool>true</bool>
-             </property>
-            </widget>
+             </widget>
            </item>
            <item>
             <spacer name="horizontalSpacer_4">
@@ -271,7 +262,7 @@
             </spacer>
            </item>
            <item>
-            <widget class="QPushButton" name="frameAdvanceButton">
+            <widget class="TransparentToolButton" name="frameAdvanceButton">
              <property name="sizePolicy">
               <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
                <horstretch>0</horstretch>
@@ -285,16 +276,13 @@
               </size>
              </property>
              <property name="text">
-              <string/>
+              <string />
              </property>
              <property name="icon">
               <iconset resource="media.qrc">
                <normaloff>:/media/media/next_marker_off.png</normaloff>:/media/media/next_marker_off.png</iconset>
              </property>
-             <property name="flat">
-              <bool>true</bool>
-             </property>
-            </widget>
+             </widget>
            </item>
            <item>
             <spacer name="horizontalSpacer_2">
@@ -313,89 +301,74 @@
             </spacer>
            </item>
            <item>
-            <widget class="QPushButton" name="addMarkerButton">
+            <widget class="TransparentToolButton" name="addMarkerButton">
              <property name="toolTip">
               <string>Add Marker</string>
              </property>
              <property name="text">
-              <string/>
+              <string />
              </property>
              <property name="icon">
               <iconset resource="media.qrc">
                <normaloff>:/media/media/add_marker_hover.png</normaloff>:/media/media/add_marker_hover.png</iconset>
              </property>
-             <property name="flat">
-              <bool>true</bool>
-             </property>
-            </widget>
+             </widget>
            </item>
            <item>
-            <widget class="QPushButton" name="removeMarkerButton">
+            <widget class="TransparentToolButton" name="removeMarkerButton">
              <property name="toolTip">
               <string>Remove Marker</string>
              </property>
              <property name="text">
-              <string/>
+              <string />
              </property>
              <property name="icon">
               <iconset resource="media.qrc">
                <normaloff>:/media/media/remove_marker_hover.png</normaloff>:/media/media/remove_marker_hover.png</iconset>
              </property>
-             <property name="flat">
-              <bool>true</bool>
-             </property>
-            </widget>
+             </widget>
            </item>
            <item>
-            <widget class="QPushButton" name="previousMarkerButton">
+            <widget class="TransparentToolButton" name="previousMarkerButton">
              <property name="toolTip">
               <string>Move to Previous Marker</string>
              </property>
              <property name="text">
-              <string/>
+              <string />
              </property>
              <property name="icon">
               <iconset resource="media.qrc">
                <normaloff>:/media/media/previous_marker_hover.png</normaloff>:/media/media/previous_marker_hover.png</iconset>
              </property>
-             <property name="flat">
-              <bool>true</bool>
-             </property>
-            </widget>
+             </widget>
            </item>
            <item>
-            <widget class="QPushButton" name="nextMarkerButton">
+            <widget class="TransparentToolButton" name="nextMarkerButton">
              <property name="toolTip">
               <string>Move to Next Marker</string>
              </property>
              <property name="text">
-              <string/>
+              <string />
              </property>
              <property name="icon">
               <iconset resource="media.qrc">
                <normaloff>:/media/media/next_marker_hover.png</normaloff>:/media/media/next_marker_hover.png</iconset>
              </property>
-             <property name="flat">
-              <bool>true</bool>
-             </property>
-            </widget>
+             </widget>
            </item>
            <item>
-            <widget class="QPushButton" name="viewFullScreenButton">
+            <widget class="TransparentToolButton" name="viewFullScreenButton">
              <property name="toolTip">
               <string>View Fullscreen (F11)</string>
              </property>
              <property name="text">
-              <string/>
+              <string />
              </property>
              <property name="icon">
               <iconset resource="media.qrc">
                <normaloff>:/media/media/fullscreen.png</normaloff>:/media/media/fullscreen.png</iconset>
              </property>
-             <property name="flat">
-              <bool>true</bool>
-             </property>
-            </widget>
+             </widget>
            </item>
            <item>
             <spacer name="horizontalSpacer_5">
@@ -473,7 +446,7 @@
               <widget class="QWidget" name="verticalWidget" native="true">
                <layout class="QVBoxLayout" name="controlButtonsLayout">
                 <item>
-                 <widget class="QPushButton" name="findTargetFacesButton">
+                 <widget class="PushButton" name="findTargetFacesButton">
                   <property name="minimumSize">
                    <size>
                     <width>100</width>
@@ -492,7 +465,7 @@
                  </widget>
                 </item>
                 <item>
-                 <widget class="QPushButton" name="clearTargetFacesButton">
+                 <widget class="PushButton" name="clearTargetFacesButton">
                   <property name="text">
                    <string>Clear Faces</string>
                   </property>
@@ -505,7 +478,7 @@
                  </widget>
                 </item>
                 <item>
-                 <widget class="QPushButton" name="swapfacesButton">
+                 <widget class="PrimaryPushButton" name="swapfacesButton">
                   <property name="text">
                    <string>Swap Faces</string>
                   </property>
@@ -518,7 +491,7 @@
                  </widget>
                 </item>
                 <item>
-                 <widget class="QPushButton" name="editFacesButton">
+                 <widget class="PrimaryPushButton" name="editFacesButton">
                   <property name="text">
                    <string>Edit Faces</string>
                   </property>
@@ -540,7 +513,7 @@
            </widget>
           </item>
           <item row="1" column="2">
-           <widget class="QListWidget" name="inputEmbeddingsList">
+           <widget class="ListWidget" name="inputEmbeddingsList">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
               <horstretch>4</horstretch>
@@ -594,7 +567,7 @@
           <item row="0" column="0">
            <layout class="QHBoxLayout" name="horizontalLayout_4">
             <item>
-             <widget class="QPushButton" name="saveImageButton">
+             <widget class="PushButton" name="saveImageButton">
               <property name="text">
                <string>Save Image</string>
               </property>
@@ -608,67 +581,58 @@
           <item row="0" column="2">
            <layout class="QHBoxLayout" name="horizontalLayout_3">
             <item>
-             <widget class="QLineEdit" name="inputEmbeddingsSearchBox">
+             <widget class="LineEdit" name="inputEmbeddingsSearchBox">
               <property name="placeholderText">
                <string>Search Embeddings</string>
               </property>
              </widget>
             </item>
             <item>
-             <widget class="QPushButton" name="openEmbeddingButton">
+             <widget class="TransparentToolButton" name="openEmbeddingButton">
               <property name="toolTip">
                <string>Open Embedding File</string>
               </property>
               <property name="text">
-               <string/>
+               <string />
               </property>
               <property name="icon">
                <iconset resource="media.qrc">
                 <normaloff>:/media/media/open_file.png</normaloff>:/media/media/open_file.png</iconset>
               </property>
-              <property name="flat">
-               <bool>true</bool>
-              </property>
-             </widget>
+              </widget>
             </item>
             <item>
-             <widget class="QPushButton" name="saveEmbeddingButton">
+             <widget class="TransparentToolButton" name="saveEmbeddingButton">
               <property name="toolTip">
                <string>Save Embedding</string>
               </property>
               <property name="text">
-               <string/>
+               <string />
               </property>
               <property name="icon">
                <iconset resource="media.qrc">
                 <normaloff>:/media/media/save_file.png</normaloff>:/media/media/save_file.png</iconset>
               </property>
-              <property name="flat">
-               <bool>true</bool>
-              </property>
-             </widget>
+              </widget>
             </item>
             <item>
-             <widget class="QPushButton" name="saveEmbeddingAsButton">
+             <widget class="TransparentToolButton" name="saveEmbeddingAsButton">
               <property name="toolTip">
                <string>Save Embedding As</string>
               </property>
               <property name="text">
-               <string/>
+               <string />
               </property>
               <property name="icon">
                <iconset resource="media.qrc">
                 <normaloff>:/media/media/save_file_as.png</normaloff>:/media/media/save_file_as.png</iconset>
               </property>
-              <property name="flat">
-               <bool>true</bool>
-              </property>
-             </widget>
+              </widget>
             </item>
            </layout>
           </item>
           <item row="1" column="1">
-           <widget class="QListWidget" name="targetFacesList">
+           <widget class="ListWidget" name="targetFacesList">
             <property name="autoFillBackground">
              <bool>true</bool>
             </property>
@@ -730,7 +694,7 @@
              </widget>
             </item>
             <item>
-             <widget class="QPushButton" name="buttonTargetVideosPath">
+             <widget class="TransparentToolButton" name="buttonTargetVideosPath">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                 <horstretch>0</horstretch>
@@ -741,7 +705,7 @@
                <string>Choose Target Media Folder</string>
               </property>
               <property name="text">
-               <string/>
+               <string />
               </property>
               <property name="icon">
                <iconset resource="media.qrc">
@@ -753,10 +717,7 @@
                 <height>18</height>
                </size>
               </property>
-              <property name="flat">
-               <bool>true</bool>
-              </property>
-             </widget>
+              </widget>
             </item>
            </layout>
           </item>
@@ -766,9 +727,9 @@
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_9">
          <item>
-          <widget class="QLineEdit" name="targetVideosSearchBox">
+          <widget class="LineEdit" name="targetVideosSearchBox">
            <property name="text">
-            <string/>
+            <string />
            </property>
            <property name="placeholderText">
             <string>Search Videos/Images</string>
@@ -776,12 +737,12 @@
           </widget>
          </item>
          <item>
-          <widget class="QCheckBox" name="filterImagesCheckBox">
+          <widget class="CheckBox" name="filterImagesCheckBox">
            <property name="toolTip">
             <string>Include Images</string>
            </property>
            <property name="text">
-            <string/>
+            <string />
            </property>
            <property name="icon">
             <iconset resource="media.qrc">
@@ -793,12 +754,12 @@
           </widget>
          </item>
          <item>
-          <widget class="QCheckBox" name="filterVideosCheckBox">
+          <widget class="CheckBox" name="filterVideosCheckBox">
            <property name="toolTip">
             <string>Include Videos</string>
            </property>
            <property name="text">
-            <string/>
+            <string />
            </property>
            <property name="icon">
             <iconset resource="media.qrc">
@@ -810,12 +771,12 @@
           </widget>
          </item>
          <item>
-          <widget class="QCheckBox" name="filterWebcamsCheckBox">
+          <widget class="CheckBox" name="filterWebcamsCheckBox">
            <property name="toolTip">
             <string>Include Webcams</string>
            </property>
            <property name="text">
-            <string/>
+            <string />
            </property>
            <property name="icon">
             <iconset resource="media.qrc">
@@ -829,7 +790,7 @@
         </layout>
        </item>
        <item>
-        <widget class="QListWidget" name="targetVideosList">
+        <widget class="ListWidget" name="targetVideosList">
          <property name="acceptDrops">
           <bool>true</bool>
          </property>
@@ -854,7 +815,7 @@
              </widget>
             </item>
             <item>
-             <widget class="QPushButton" name="buttonInputFacesPath">
+             <widget class="TransparentToolButton" name="buttonInputFacesPath">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                 <horstretch>0</horstretch>
@@ -865,7 +826,7 @@
                <string>Choose Input Faces Folder</string>
               </property>
               <property name="text">
-               <string/>
+               <string />
               </property>
               <property name="icon">
                <iconset resource="media.qrc">
@@ -877,10 +838,7 @@
                 <height>18</height>
                </size>
               </property>
-              <property name="flat">
-               <bool>true</bool>
-              </property>
-             </widget>
+              </widget>
             </item>
            </layout>
           </item>
@@ -888,14 +846,14 @@
         </widget>
        </item>
        <item>
-        <widget class="QLineEdit" name="inputFacesSearchBox">
+        <widget class="LineEdit" name="inputFacesSearchBox">
          <property name="placeholderText">
           <string>Search Faces</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QListWidget" name="inputFacesList">
+        <widget class="ListWidget" name="inputFacesList">
          <property name="acceptDrops">
           <bool>true</bool>
          </property>
@@ -960,7 +918,7 @@
         </attribute>
         <layout class="QVBoxLayout" name="verticalLayout_4">
          <item>
-          <layout class="QVBoxLayout" name="swapWidgetsLayout"/>
+          <layout class="QVBoxLayout" name="swapWidgetsLayout" />
          </item>
         </layout>
        </widget>
@@ -970,7 +928,7 @@
         </attribute>
         <layout class="QVBoxLayout" name="verticalLayout_3">
          <item>
-          <layout class="QVBoxLayout" name="faceEditorWidgetsLayout"/>
+          <layout class="QVBoxLayout" name="faceEditorWidgetsLayout" />
          </item>
         </layout>
        </widget>
@@ -980,7 +938,7 @@
         </attribute>
         <layout class="QVBoxLayout" name="commonWidgetsLayout_1">
          <item>
-          <layout class="QVBoxLayout" name="commonWidgetsLayout"/>
+          <layout class="QVBoxLayout" name="commonWidgetsLayout" />
          </item>
         </layout>
        </widget>
@@ -1001,14 +959,14 @@
            <item>
             <layout class="QHBoxLayout" name="outputFolderSelectionLayout">
              <item>
-              <widget class="QLineEdit" name="outputFolderLineEdit">
+              <widget class="LineEdit" name="outputFolderLineEdit">
                <property name="readOnly">
                 <bool>true</bool>
                </property>
               </widget>
              </item>
              <item>
-              <widget class="QPushButton" name="outputFolderButton">
+              <widget class="PushButton" name="outputFolderButton">
                <property name="text">
                 <string>Browse Folder</string>
                </property>
@@ -1028,14 +986,14 @@
      <item row="0" column="0">
       <layout class="QHBoxLayout" name="horizontalLayout_2">
        <item>
-        <widget class="QProgressBar" name="vramProgressBar">
+        <widget class="ProgressBar" name="vramProgressBar">
          <property name="value">
           <number>24</number>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="clearMemoryButton">
+        <widget class="PushButton" name="clearMemoryButton">
          <property name="text">
           <string>Clear VRAM</string>
          </property>
@@ -1062,34 +1020,34 @@
     <property name="title">
      <string>File</string>
     </property>
-    <addaction name="actionLoad_SavedWorkspace"/>
-    <addaction name="actionSave_CurrentWorkspace"/>
-    <addaction name="separator"/>
-    <addaction name="actionOpen_Videos_Folder"/>
-    <addaction name="actionOpen_Video_Files"/>
-    <addaction name="separator"/>
-    <addaction name="actionLoad_Source_Images_Folder"/>
-    <addaction name="actionLoad_Source_Image_Files"/>
-    <addaction name="separator"/>
-    <addaction name="actionLoad_Embeddings"/>
-    <addaction name="actionSave_Embeddings"/>
-    <addaction name="actionSave_Embeddings_As"/>
+    <addaction name="actionLoad_SavedWorkspace" />
+    <addaction name="actionSave_CurrentWorkspace" />
+    <addaction name="separator" />
+    <addaction name="actionOpen_Videos_Folder" />
+    <addaction name="actionOpen_Video_Files" />
+    <addaction name="separator" />
+    <addaction name="actionLoad_Source_Images_Folder" />
+    <addaction name="actionLoad_Source_Image_Files" />
+    <addaction name="separator" />
+    <addaction name="actionLoad_Embeddings" />
+    <addaction name="actionSave_Embeddings" />
+    <addaction name="actionSave_Embeddings_As" />
    </widget>
    <widget class="QMenu" name="menuEdit">
     <property name="title">
      <string>Edit</string>
     </property>
-    <addaction name="actionTest_2"/>
+    <addaction name="actionTest_2" />
    </widget>
    <widget class="QMenu" name="menuView">
     <property name="title">
      <string>View</string>
     </property>
-    <addaction name="actionView_Fullscreen_F11"/>
+    <addaction name="actionView_Fullscreen_F11" />
    </widget>
-   <addaction name="menuFile"/>
-   <addaction name="menuEdit"/>
-   <addaction name="menuView"/>
+   <addaction name="menuFile" />
+   <addaction name="menuEdit" />
+   <addaction name="menuView" />
   </widget>
   <action name="actionExit">
    <property name="text">
@@ -1168,7 +1126,7 @@
   </action>
  </widget>
  <resources>
-  <include location="media.qrc"/>
+  <include location="media.qrc" />
  </resources>
- <connections/>
-</ui>
+ <connections />
+<customwidgets><customwidget><class>CheckBox</class><extends>QCheckBox</extends><header>qfluentwidgets</header></customwidget><customwidget><class>LineEdit</class><extends>QLineEdit</extends><header>qfluentwidgets</header></customwidget><customwidget><class>ListWidget</class><extends>QListWidget</extends><header>qfluentwidgets</header></customwidget><customwidget><class>PrimaryPushButton</class><extends>QPushButton</extends><header>qfluentwidgets</header></customwidget><customwidget><class>ProgressBar</class><extends>QProgressBar</extends><header>qfluentwidgets</header></customwidget><customwidget><class>PushButton</class><extends>QPushButton</extends><header>qfluentwidgets</header></customwidget><customwidget><class>Slider</class><extends>QSlider</extends><header>qfluentwidgets</header></customwidget><customwidget><class>TransparentToolButton</class><extends>QToolButton</extends><header>qfluentwidgets</header></customwidget></customwidgets></ui>

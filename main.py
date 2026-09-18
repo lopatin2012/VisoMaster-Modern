@@ -2,6 +2,7 @@ import torch  # noqa: F401  # Must be imported before PySide6 on Python 3.10 (Py
 
 from app.ui import main_ui
 from PySide6 import QtWidgets 
+import os
 import sys
 
 import qdarktheme
@@ -19,4 +20,11 @@ if __name__=="__main__":
         app.setStyleSheet(_style)
     window = main_ui.MainWindow()
     window.show()
-    app.exec()
+    exit_code = app.exec()
+
+    # Tearing down the CUDA/TensorRT context after Qt's C++ objects are destroyed
+    # crashes during Python finalization on Windows (access violation, pre-existing
+    # upstream bug). Flush and hard-exit instead of running interpreter teardown.
+    sys.stdout.flush()
+    sys.stderr.flush()
+    os._exit(exit_code)
