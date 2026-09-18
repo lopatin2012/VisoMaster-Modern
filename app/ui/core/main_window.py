@@ -18,12 +18,12 @@ from PySide6.QtGui import (QAction, QBrush, QColor, QConicalGradient,
     QTransform)
 from PySide6.QtWidgets import (QApplication, QDockWidget, QGraphicsView, QGridLayout,
     QGroupBox, QHBoxLayout, QLabel, QListView,
-    QListWidgetItem, QMainWindow, QMenu, QMenuBar,
-    QProgressBar, QSizePolicy, QSlider, QSpacerItem,
-    QTabWidget, QVBoxLayout, QWidget)
+    QListWidget, QListWidgetItem, QMainWindow, QMenu,
+    QMenuBar, QProgressBar, QSizePolicy, QSlider,
+    QSpacerItem, QTabWidget, QVBoxLayout, QWidget)
 
-from qfluentwidgets import (CheckBox, LineEdit, ListWidget, PrimaryPushButton,
-    ProgressBar, PushButton, Slider, TransparentToolButton)
+from qfluentwidgets import (CheckBox, LineEdit, PrimaryPushButton, PushButton,
+    TransparentToolButton)
 from app.ui.core import media_rc
 
 class Ui_MainWindow(object):
@@ -331,7 +331,7 @@ class Ui_MainWindow(object):
 
         self.gridLayout_2.addWidget(self.facesButtonsWidget, 1, 0, 1, 1)
 
-        self.inputEmbeddingsList = ListWidget(self.facesPanelGroupBox)
+        self.inputEmbeddingsList = QListWidget(self.facesPanelGroupBox)
         self.inputEmbeddingsList.setObjectName(u"inputEmbeddingsList")
         sizePolicy5 = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         sizePolicy5.setHorizontalStretch(4)
@@ -397,7 +397,7 @@ class Ui_MainWindow(object):
 
         self.gridLayout_2.addLayout(self.horizontalLayout_3, 0, 2, 1, 1)
 
-        self.targetFacesList = ListWidget(self.facesPanelGroupBox)
+        self.targetFacesList = QListWidget(self.facesPanelGroupBox)
         self.targetFacesList.setObjectName(u"targetFacesList")
         self.targetFacesList.setAutoFillBackground(True)
         self.targetFacesList.setAutoScroll(False)
@@ -493,7 +493,7 @@ class Ui_MainWindow(object):
 
         self.vboxLayout.addLayout(self.horizontalLayout_9)
 
-        self.targetVideosList = ListWidget(self.dockWidgetContents)
+        self.targetVideosList = QListWidget(self.dockWidgetContents)
         self.targetVideosList.setObjectName(u"targetVideosList")
         self.targetVideosList.setAcceptDrops(True)
         self.targetVideosList.setAutoScroll(False)
@@ -531,7 +531,7 @@ class Ui_MainWindow(object):
 
         self.vboxLayout.addWidget(self.inputFacesSearchBox)
 
-        self.inputFacesList = ListWidget(self.dockWidgetContents)
+        self.inputFacesList = QListWidget(self.dockWidgetContents)
         self.inputFacesList.setObjectName(u"inputFacesList")
         self.inputFacesList.setAcceptDrops(True)
         self.inputFacesList.setAutoScroll(False)

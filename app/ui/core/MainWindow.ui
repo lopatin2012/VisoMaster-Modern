@@ -513,7 +513,7 @@
            </widget>
           </item>
           <item row="1" column="2">
-           <widget class="ListWidget" name="inputEmbeddingsList">
+           <widget class="QListWidget" name="inputEmbeddingsList">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
               <horstretch>4</horstretch>
@@ -632,7 +632,7 @@
            </layout>
           </item>
           <item row="1" column="1">
-           <widget class="ListWidget" name="targetFacesList">
+           <widget class="QListWidget" name="targetFacesList">
             <property name="autoFillBackground">
              <bool>true</bool>
             </property>
@@ -790,7 +790,7 @@
         </layout>
        </item>
        <item>
-        <widget class="ListWidget" name="targetVideosList">
+        <widget class="QListWidget" name="targetVideosList">
          <property name="acceptDrops">
           <bool>true</bool>
          </property>
@@ -853,7 +853,7 @@
         </widget>
        </item>
        <item>
-        <widget class="ListWidget" name="inputFacesList">
+        <widget class="QListWidget" name="inputFacesList">
          <property name="acceptDrops">
           <bool>true</bool>
          </property>
@@ -1129,4 +1129,4 @@
   <include location="media.qrc" />
  </resources>
  <connections />
-<customwidgets><customwidget><class>CheckBox</class><extends>QCheckBox</extends><header>qfluentwidgets</header></customwidget><customwidget><class>LineEdit</class><extends>QLineEdit</extends><header>qfluentwidgets</header></customwidget><customwidget><class>ListWidget</class><extends>QListWidget</extends><header>qfluentwidgets</header></customwidget><customwidget><class>PrimaryPushButton</class><extends>QPushButton</extends><header>qfluentwidgets</header></customwidget><customwidget><class>ProgressBar</class><extends>QProgressBar</extends><header>qfluentwidgets</header></customwidget><customwidget><class>PushButton</class><extends>QPushButton</extends><header>qfluentwidgets</header></customwidget><customwidget><class>Slider</class><extends>QSlider</extends><header>qfluentwidgets</header></customwidget><customwidget><class>TransparentToolButton</class><extends>QToolButton</extends><header>qfluentwidgets</header></customwidget></customwidgets></ui>
+<customwidgets><customwidget><class>CheckBox</class><extends>QCheckBox</extends><header>qfluentwidgets</header></customwidget><customwidget><class>LineEdit</class><extends>QLineEdit</extends><header>qfluentwidgets</header></customwidget><customwidget><class>PrimaryPushButton</class><extends>QPushButton</extends><header>qfluentwidgets</header></customwidget><customwidget><class>PushButton</class><extends>QPushButton</extends><header>qfluentwidgets</header></customwidget><customwidget><class>TransparentToolButton</class><extends>QToolButton</extends><header>qfluentwidgets</header></customwidget></customwidgets></ui>
