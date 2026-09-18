@@ -214,6 +214,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         # Apply the saved interface language before widgets are created from LAYOUT_DATA.
         i18n.load_language()
         i18n.apply_to_widgets(self)
+        self.setWindowIcon(QtGui.QIcon("app/ui/core/media/modern_icon.png"))
         self._restore_window_geometry()
         self.initialize_variables()
         self.initialize_widgets()

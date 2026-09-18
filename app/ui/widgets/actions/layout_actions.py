@@ -368,6 +368,12 @@ def set_up_settings_menu(main_window: 'MainWindow'):
     language_menu.aboutToShow.connect(_sync_language)
     _sync_language()
 
+    # About
+    settings_menu.addSeparator()
+    about_action = settings_menu.addAction(i18n.tr("About"))
+    about_action.setProperty("_i18n_src", "About")
+    about_action.triggered.connect(partial(control_actions.show_about, main_window))
+
 def disable_all_parameters_and_control_widget(main_window: 'MainWindow'):
     # Disable all bottom buttons
     main_window.saveImageButton.setDisabled(True)

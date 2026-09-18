@@ -65,6 +65,19 @@ def set_theme_from_menu(main_window: 'MainWindow', new_theme):
     main_window.control['ThemeSelection'] = new_theme
     change_theme(main_window, new_theme)
 
+
+def show_about(main_window: 'MainWindow'):
+    from qfluentwidgets import MessageBox
+    content = (
+        "VisoMaster-Modern\n"
+        "GPL-3.0\n\n"
+        "https://github.com/lopatin2012/VisoMaster-Modern"
+    )
+    box = MessageBox(i18n.tr("About"), content, main_window)
+    box.yesButton.setText(i18n.tr("OK"))
+    box.cancelButton.hide()
+    box.exec()
+
 def set_video_playback_fps(main_window: 'MainWindow', set_video_fps=False):
     # print("Called set_video_playback_fps()")
     if set_video_fps and main_window.video_processor.media_capture:

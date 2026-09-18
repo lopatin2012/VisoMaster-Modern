@@ -9,7 +9,7 @@ if "--profile" in sys.argv:
 import torch  # noqa: F401  # Must be imported before PySide6 on Python 3.10 (PySide6 mutates typing.Self, breaking torch._dynamo / torchvision)
 
 from app.ui import main_ui
-from PySide6 import QtWidgets
+from PySide6 import QtWidgets, QtGui
 
 import qdarktheme
 from app.ui.core.proxy_style import ProxyStyle
@@ -31,6 +31,7 @@ if __name__=="__main__":
 
     app = QtWidgets.QApplication(sys.argv)
     app.setStyle(ProxyStyle())
+    app.setWindowIcon(QtGui.QIcon("app/ui/core/media/modern_icon.png"))
     i18n.install_qt_translations(app, i18n.load_language())
     apply_fluent_theme("Dark")
     with open("app/ui/styles/dark_styles.qss", "r") as f:

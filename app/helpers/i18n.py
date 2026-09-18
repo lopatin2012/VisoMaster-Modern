@@ -596,6 +596,7 @@ TRANSLATIONS = {
         "Create Embedding": "Создать эмбеддинг",
         "Enter embedding name": "Введите имя эмбеддинга",
         "Load Last Workspace": "Загрузить последнюю сессию",
+        "About": "О программе",
         "Loading Models": "Загрузка моделей",
         "Do you want to load your last workspace?": "Загрузить последнюю сессию?",
         "Loading Models, please wait...\nDon't panic if it looks stuck!": "Загрузка моделей, подождите...\nНе паникуйте, если кажется, что зависло!",

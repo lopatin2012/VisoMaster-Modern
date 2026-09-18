@@ -723,7 +723,7 @@ class CreateEmbeddingDialog(QtWidgets.QDialog):
         self.embedding_name = ''
         self.merge_type = ''
         self.setWindowTitle(i18n.tr("Create Embedding"))
-        self.setWindowIcon(QtGui.QIcon(u":/media/media/visomaster_small.png"))
+        self.setWindowIcon(QtGui.QIcon("app/ui/core/media/modern_icon.png"))
 
         # Create widgets
         self.embed_name_edit = qfw.LineEdit(self)
@@ -792,7 +792,7 @@ class LoadingDialog(QtWidgets.QDialog):
     def __init__(self, message="Loading Models, please wait...\nDon't panic if it looks stuck!"):
         super().__init__()
         self.setWindowTitle(i18n.tr("Loading Models"))
-        self.setWindowIcon(QtGui.QIcon(u":/media/media/visomaster_small.png"))
+        self.setWindowIcon(QtGui.QIcon("app/ui/core/media/modern_icon.png"))
         self.setWindowFlag(QtCore.Qt.WindowCloseButtonHint, False)
         self.setModal(True)  # Block interaction with other windows
         self.setFixedSize(225, 125)  # Increased size for better layout
