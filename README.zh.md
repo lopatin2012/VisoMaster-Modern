@@ -55,6 +55,13 @@ py -3.11 -m venv .venv
 .venv\Scripts\python.exe -m pip install -r requirements_cu129.txt
 ```
 
+或运行**自动安装程序**（检查/安装 Python 3.11，创建 `.venv`，安装依赖，下载模型和 ffmpeg）：
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\install.ps1
+```
+也可以直接双击 **install.bat**。
+
 ## 模型与 ffmpeg
 
 1. 下载所需模型：

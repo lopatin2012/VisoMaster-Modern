@@ -69,6 +69,14 @@ py -3.11 -m venv .venv
 .venv\Scripts\python.exe -m pip install -r requirements_cu129.txt
 ```
 
+Или запусти **авто-установщик** (проверяет/ставит Python 3.11, создаёт `.venv`, ставит
+зависимости, скачивает модели и ffmpeg):
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\install.ps1
+```
+Можно просто дважды кликнуть **install.bat**.
+
 ## Модели и ffmpeg
 
 1. Скачайте модели:
