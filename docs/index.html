@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>VisoMaster-Modern</title>
+  <link rel="stylesheet" href="style.css">
+  <script>
+    (function () {
+      var forced = new URLSearchParams(location.search).get("lang");
+      var target = "en";
+      if (forced === "en" || forced === "ru" || forced === "zh") {
+        target = forced;
+      } else {
+        var langs = navigator.languages || [navigator.language || "en"];
+        for (var i = 0; i < langs.length; i++) {
+          var code = String(langs[i]).toLowerCase();
+          if (code.indexOf("ru") === 0) { target = "ru"; break; }
+          if (code.indexOf("zh") === 0) { target = "zh"; break; }
+        }
+      }
+      location.replace(target + ".html");
+    })();
+  </script>
+</head>
+<body>
+  <main class="card">
+    <h1>VisoMaster-Modern</h1>
+    <p class="lead">Choose a language / Выберите язык / 选择语言</p>
+    <p>
+      <a class="btn" href="en.html">English</a>
+      <a class="btn" href="ru.html">Русский</a>
+      <a class="btn" href="zh.html">中文</a>
+    </p>
+  </main>
+</body>
+</html>

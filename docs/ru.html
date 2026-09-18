@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>VisoMaster-Modern</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="card">
+    <nav class="lang">
+      <a class="btn" href="en.html">English</a>
+      <a class="btn active" href="ru.html">Русский</a>
+      <a class="btn" href="zh.html">中文</a>
+    </nav>
+
+    <h1>VisoMaster-Modern</h1>
+    <p class="lead">Замена и редактирование лиц на изображениях, видео и в веб-камере с помощью ИИ.
+      Форк VisoMaster, адаптированный под современные GPU NVIDIA (CUDA 12.9 / Blackwell).</p>
+
+    <h2>Что это</h2>
+    <ul>
+      <li>Замена лиц с несколькими моделями сваппера и поддержкой DeepFaceLab DFM</li>
+      <li>Маскирование по частям лица, маска перекрытий и восстановление лиц</li>
+      <li>Редактор лица на базе LivePortrait (выражение, поза, коррекция цвета)</li>
+      <li>Эмбеддинги лиц, видео-маркеры и вывод в виртуальную камеру</li>
+    </ul>
+
+    <h2>Требования</h2>
+    <ul>
+      <li>Windows 10/11 (Linux тоже), актуальный драйвер NVIDIA</li>
+      <li>Python 3.11 (не 3.14), современный GPU (RTX 40/50, <code>sm_90</code>/<code>sm_120</code>)</li>
+      <li>~15 ГБ на диске под модели и кэши</li>
+    </ul>
+
+    <h2>Установка</h2>
+    <pre><code>git clone https://github.com/lopatin2012/VisoMaster-Modern.git
+cd VisoMaster-Modern
+py -3.11 -m venv .venv
+.venv\Scripts\python.exe -m pip install -r requirements_cu129.txt
+.venv\Scripts\python.exe download_models.py</code></pre>
+
+    <h2>Запуск</h2>
+    <pre><code>.venv\Scripts\python.exe main.py</code></pre>
+    <p>или двойной клик по <code>Start.bat</code>. Диагностика: <code>main.py --profile</code>.</p>
+
+    <p class="footer">
+      <a href="https://github.com/lopatin2012/VisoMaster-Modern">Репозиторий на GitHub</a> ·
+      <a href="https://github.com/lopatin2012/VisoMaster-Modern/blob/main/README.ru.md">README (RU)</a> ·
+      <a href="https://github.com/lopatin2012/VisoMaster-Modern/blob/main/LICENSE">Лицензия (GPL-3.0)</a>
+    </p>
+  </main>
+</body>
+</html>

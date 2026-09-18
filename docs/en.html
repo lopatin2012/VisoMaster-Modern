@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>VisoMaster-Modern</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="card">
+    <nav class="lang">
+      <a class="btn active" href="en.html">English</a>
+      <a class="btn" href="ru.html">Русский</a>
+      <a class="btn" href="zh.html">中文</a>
+    </nav>
+
+    <h1>VisoMaster-Modern</h1>
+    <p class="lead">AI face swapping and editing for images, videos and webcam streams.
+      A community fork of VisoMaster, modernized for recent NVIDIA GPUs (CUDA 12.9 / Blackwell).</p>
+
+    <h2>What it does</h2>
+    <ul>
+      <li>Face swap with multiple swapper models and DeepFaceLab DFM support</li>
+      <li>Per-part masking, occlusion masking and face restoration</li>
+      <li>LivePortrait-based face editor (expression / pose, color adjustments)</li>
+      <li>Face embeddings, video markers and virtual-camera output</li>
+    </ul>
+
+    <h2>Requirements</h2>
+    <ul>
+      <li>Windows 10/11 (Linux too), recent NVIDIA driver</li>
+      <li>Python 3.11 (not 3.14), modern GPU (RTX 40/50, <code>sm_90</code>/<code>sm_120</code>)</li>
+      <li>~15 GB disk for models and caches</li>
+    </ul>
+
+    <h2>Install</h2>
+    <pre><code>git clone https://github.com/lopatin2012/VisoMaster-Modern.git
+cd VisoMaster-Modern
+py -3.11 -m venv .venv
+.venv\Scripts\python.exe -m pip install -r requirements_cu129.txt
+.venv\Scripts\python.exe download_models.py</code></pre>
+
+    <h2>Run</h2>
+    <pre><code>.venv\Scripts\python.exe main.py</code></pre>
+    <p>or double-click <code>Start.bat</code>. Optional diagnostics: <code>main.py --profile</code>.</p>
+
+    <p class="footer">
+      <a href="https://github.com/lopatin2012/VisoMaster-Modern">GitHub repository</a> ·
+      <a href="https://github.com/lopatin2012/VisoMaster-Modern/blob/main/README.md">README</a> ·
+      <a href="https://github.com/lopatin2012/VisoMaster-Modern/blob/main/LICENSE">License (GPL-3.0)</a>
+    </p>
+  </main>
+</body>
+</html>

@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>VisoMaster-Modern</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="card">
+    <nav class="lang">
+      <a class="btn" href="en.html">English</a>
+      <a class="btn" href="ru.html">Русский</a>
+      <a class="btn active" href="zh.html">中文</a>
+    </nav>
+
+    <h1>VisoMaster-Modern</h1>
+    <p class="lead">基于 AI 的图片、视频和摄像头人脸替换与编辑。
+      VisoMaster 的社区分支，针对现代 NVIDIA 显卡（CUDA 12.9 / Blackwell）进行了现代化改造。</p>
+
+    <h2>功能</h2>
+    <ul>
+      <li>多种换脸模型，兼容 DeepFaceLab DFM</li>
+      <li>按面部部件遮罩、遮挡遮罩与人脸修复</li>
+      <li>基于 LivePortrait 的人脸编辑器（表情、姿势、颜色调整）</li>
+      <li>人脸特征、视频标记与虚拟摄像头输出</li>
+    </ul>
+
+    <h2>要求</h2>
+    <ul>
+      <li>Windows 10/11（Linux 也可），较新的 NVIDIA 驱动</li>
+      <li>Python 3.11（不要用 3.14），现代 GPU（RTX 40/50，<code>sm_90</code>/<code>sm_120</code>）</li>
+      <li>约 15 GB 磁盘空间用于模型和缓存</li>
+    </ul>
+
+    <h2>安装</h2>
+    <pre><code>git clone https://github.com/lopatin2012/VisoMaster-Modern.git
+cd VisoMaster-Modern
+py -3.11 -m venv .venv
+.venv\Scripts\python.exe -m pip install -r requirements_cu129.txt
+.venv\Scripts\python.exe download_models.py</code></pre>
+
+    <h2>运行</h2>
+    <pre><code>.venv\Scripts\python.exe main.py</code></pre>
+    <p>或双击 <code>Start.bat</code>。诊断：<code>main.py --profile</code>。</p>
+
+    <p class="footer">
+      <a href="https://github.com/lopatin2012/VisoMaster-Modern">GitHub 仓库</a> ·
+      <a href="https://github.com/lopatin2012/VisoMaster-Modern/blob/main/README.zh.md">README（中文）</a> ·
+      <a href="https://github.com/lopatin2012/VisoMaster-Modern/blob/main/LICENSE">许可证（GPL-3.0）</a>
+    </p>
+  </main>
+</body>
+</html>
