@@ -22,6 +22,7 @@ from app.ui.widgets.actions import common_actions as common_widget_actions
 from app.ui.widgets.actions import video_control_actions
 from app.ui.widgets.actions import layout_actions
 import app.helpers.miscellaneous as misc_helpers
+from app.helpers import perf
 
 if TYPE_CHECKING:
     from app.ui.main_ui import MainWindow
@@ -386,6 +387,7 @@ class VideoProcessor(QObject):
             torch.cuda.empty_cache()
             gc.collect()
             video_control_actions.reset_media_buttons(self.main_window)
+            perf.report_and_reset()
             print("Successfully Stopped Processing")
             return True
         

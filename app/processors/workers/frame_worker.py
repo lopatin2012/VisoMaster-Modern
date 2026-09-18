@@ -16,6 +16,7 @@ from app.processors.utils import faceutil
 import app.ui.widgets.actions.common_actions as common_widget_actions
 from app.ui.widgets.actions import video_control_actions
 from app.helpers.miscellaneous import t512,t384,t256,t128, ParametersDict
+from app.helpers import perf
 
 if TYPE_CHECKING:
     from app.ui.main_ui import MainWindow
@@ -77,6 +78,8 @@ class FrameWorker(threading.Thread):
             # Mark the frame as done in the queue
             self.video_processor.frame_queue.get()
             self.video_processor.frame_queue.task_done()
+
+            perf.frame_done()
 
             # Check if playback is complete
             if self.video_processor.frame_queue.empty() and not self.video_processor.processing and self.video_processor.next_frame_to_display >= self.video_processor.max_frame_number:

@@ -31,6 +31,7 @@ from app.processors.face_editors import FaceEditors
 from app.processors.utils.dfm_model import DFMModel
 from app.processors.models_data import models_list, arcface_mapping_model_dict, models_trt_list
 from app.helpers.miscellaneous import is_file_exists
+from app.helpers import perf
 from app.helpers.downloader import download_file
 
 if TYPE_CHECKING:
@@ -122,6 +123,21 @@ class ModelsProcessor(QtCore.QObject):
         
         self.lp_mask_crop = self.face_editors.lp_mask_crop
         self.lp_lip_array = self.face_editors.lp_lip_array
+
+        # Optional per-stage profiling (VISOMASTER_PROFILE=1); no-op otherwise.
+        if perf.ENABLED:
+            for _method_name in (
+                "run_detect", "run_detect_landmark", "run_recognize_direct",
+                "run_inswapper", "run_iss_swapper", "run_swapper_simswap512",
+                "run_swapper_ghostface", "run_swapper_cscs",
+                "apply_facerestorer", "run_enhance_frame_tile_process",
+                "run_occluder", "run_dfl_xseg", "run_faceparser", "run_CLIPs",
+                "apply_occlusion", "apply_dfl_xseg", "apply_face_parser",
+                "apply_face_makeup", "restore_mouth", "restore_eyes", "apply_fake_diff",
+                "lp_motion_extractor", "lp_appearance_feature_extractor",
+                "lp_stitch", "lp_stitching", "lp_warp_decode",
+            ):
+                setattr(self, _method_name, perf.wrap(getattr(self, _method_name), _method_name))
 
     def load_model(self, model_name, session_options=None):
         with self.model_lock:
