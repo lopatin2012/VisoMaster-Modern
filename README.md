@@ -11,6 +11,20 @@
 
 ---
 
+## What it does
+
+VisoMaster-Modern is a desktop app for AI **face swapping and editing** of images, videos and webcam
+streams. It includes multiple swapper / face-restoration / frame-enhancement models (plus DeepFaceLab
+DFM models), per-part masking, a LivePortrait-based face editor, face embeddings, video markers and
+virtual-camera output.
+
+## License
+
+**GPL-3.0** — see [LICENSE](LICENSE). This is an unofficial community fork: the original VisoMaster and
+its authors retain copyright, and the fork is distributed under the same GPL-3.0 license.
+
+---
+
 ### VisoMaster is a powerful yet easy-to-use tool for face swapping and editing in images and videos. It utilizes AI to produce natural-looking results with minimal effort, making it ideal for both casual users and professionals.  
 
 ---

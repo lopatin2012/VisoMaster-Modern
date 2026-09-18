@@ -8,6 +8,12 @@ if "--profile" in sys.argv:
 
 import torch  # noqa: F401  # Must be imported before PySide6 on Python 3.10 (PySide6 mutates typing.Self, breaking torch._dynamo / torchvision)
 
+# qfluentwidgets prints a "Pro" advertisement to stdout on its first import; silence it.
+import contextlib as _contextlib
+import io as _io
+with _contextlib.redirect_stdout(_io.StringIO()):
+    import qfluentwidgets as _qfw  # noqa: F401
+
 from app.ui import main_ui
 from PySide6 import QtWidgets, QtGui
 

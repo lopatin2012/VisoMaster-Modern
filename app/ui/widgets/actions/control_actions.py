@@ -68,11 +68,13 @@ def set_theme_from_menu(main_window: 'MainWindow', new_theme):
 
 def show_about(main_window: 'MainWindow'):
     from qfluentwidgets import MessageBox
-    content = (
-        "VisoMaster-Modern\n"
-        "GPL-3.0\n\n"
-        "https://github.com/lopatin2012/VisoMaster-Modern"
-    )
+    content = "\n".join([
+        i18n.tr("AI face swapping and editing for images, videos and webcam."),
+        "",
+        i18n.tr("License: GPL-3.0 (see LICENSE). Original VisoMaster by its authors."),
+        "",
+        "https://github.com/lopatin2012/VisoMaster-Modern",
+    ])
     box = MessageBox(i18n.tr("About"), content, main_window)
     box.yesButton.setText(i18n.tr("OK"))
     box.cancelButton.hide()

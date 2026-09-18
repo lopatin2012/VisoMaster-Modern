@@ -597,6 +597,8 @@ TRANSLATIONS = {
         "Enter embedding name": "Введите имя эмбеддинга",
         "Load Last Workspace": "Загрузить последнюю сессию",
         "About": "О программе",
+        "AI face swapping and editing for images, videos and webcam.": "Замена и редактирование лиц на изображениях, видео и в веб-камере с помощью ИИ.",
+        "License: GPL-3.0 (see LICENSE). Original VisoMaster by its authors.": "Лицензия: GPL-3.0 (см. LICENSE). Оригинальный VisoMaster принадлежит его авторам.",
         "Loading Models": "Загрузка моделей",
         "Do you want to load your last workspace?": "Загрузить последнюю сессию?",
         "Loading Models, please wait...\nDon't panic if it looks stuck!": "Загрузка моделей, подождите...\nНе паникуйте, если кажется, что зависло!",
