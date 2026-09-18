@@ -10,10 +10,12 @@ VisoMaster-Modern: fork of VisoMaster, a PySide6 desktop app for AI face swappin
 - `main.py` imports `torch` before `PySide6` on purpose (PySide6 historically mutated `typing.Self`, breaking torch/torchvision). Keep that order in any new entrypoint.
 - `dependencies/` is the bundled runtime (Python, CUDA, TensorRT, `ffmpeg.exe`, git-portable); `scripts/setenv.bat` prepends its paths and `main.py` auto-adds `dependencies/` to PATH. `scripts/update_cu129.bat` pulls `origin/main` (hard reset) then reinstalls requirements.
 - Models are gitignored. `python download_models.py` fetches into `model_assets/` and hash-checks against `app/processors/models_data.py` (the source of truth for names/paths/hashes). DFM models go in `model_assets/dfm_models/`. Manual installs also need binaries from the visomaster-assets release copied into `dependencies/`.
+- A few small support files are tracked on purpose (via `.gitignore` exceptions) because no assets release ships them: `model_assets/meanshape_68.pkl`, `model_assets/liveportrait_onnx/lip_array.pkl`, `model_assets/grid_sample_3d_plugin.dll`, `model_assets/libgrid_sample_3d_plugin.so`.
 - `ffmpeg` is required for video export/recording (`video_processor.create_ffmpeg_subprocess`). `main.py` auto-adds `dependencies/` to PATH, and recording picks `h264_nvenc` when the bundled ffmpeg supports it (falls back to `libx264`).
 
 ## Verify
-- No tests, no headless mode. Verify changes by running the app (`.venv\Scripts\python.exe main.py` from the repo root). Do not invent test/lint commands.
+- Headless smoke test: `.venv\Scripts\python.exe tools\smoke_test.py` — constructs `MainWindow` offscreen and checks the widgets/menus/i18n that have regressed before (needs CUDA). Run it after UI/widget changes.
+- Otherwise verify by running the app (`.venv\Scripts\python.exe main.py` from the repo root). Do not invent other test/lint commands.
 
 ## Performance / diagnostics
 - `main.py --profile` (or `VISOMASTER_PROFILE=1`) enables the opt-in per-stage profiler in `app/helpers/perf.py`; it wraps model methods plus preview/display and prints averages every 60 frames and on stop. No-op when disabled.

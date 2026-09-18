@@ -43,10 +43,15 @@ venv/
 env/
 
 # Model assets are downloaded separately (download_models.py + visomaster-assets release),
-# never commit the weights. Keep only the directory placeholders.
+# never commit the big weights. Keep only the directory placeholders and the small required
+# native/support files that are not part of any assets release.
 /model_assets/**
 !/model_assets/**/
 !/model_assets/**/.gitkeep
+!/model_assets/meanshape_68.pkl
+!/model_assets/liveportrait_onnx/lip_array.pkl
+!/model_assets/grid_sample_3d_plugin.dll
+!/model_assets/libgrid_sample_3d_plugin.so
 
 # Portable runtime and downloaded binaries (Python/CUDA/TensorRT/ffmpeg/git-portable)
 /dependencies/**
