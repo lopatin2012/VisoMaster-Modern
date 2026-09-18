@@ -102,7 +102,7 @@
          <item>
           <layout class="QHBoxLayout" name="horizontalLayoutMediaSlider">
            <item>
-            <widget class="Slider" name="videoSeekSlider">
+            <widget class="QSlider" name="videoSeekSlider">
              <property name="orientation">
               <enum>Qt::Orientation::Horizontal</enum>
              </property>

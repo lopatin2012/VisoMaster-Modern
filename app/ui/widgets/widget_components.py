@@ -1023,6 +1023,10 @@ class ParameterSlider(qfw.Slider, ParametersWidget):
         super().mousePressEvent(event)
 
     def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
+        # qfluentwidgets' Slider changes its value on ANY mouse move, even without a
+        # button held. Restrict updates to actual dragging, like stock QSlider.
+        if not (event.buttons() & QtCore.Qt.MouseButton.LeftButton):
+            return
         new_value = self.pos_to_value(event.pos().x())
         QtWidgets.QToolTip.showText(QtGui.QCursor.pos(), f'{new_value}')
         super().mouseMoveEvent(event)
@@ -1166,6 +1170,10 @@ class ParameterDecimalSlider(qfw.Slider, ParametersWidget):
         super().mousePressEvent(event)
 
     def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
+        # qfluentwidgets' Slider changes its value on ANY mouse move, even without a
+        # button held. Restrict updates to actual dragging, like stock QSlider.
+        if not (event.buttons() & QtCore.Qt.MouseButton.LeftButton):
+            return
         new_value = self.pos_to_value(event.pos().x())
         QtWidgets.QToolTip.showText(QtGui.QCursor.pos(), f'{new_value}')
         super().mouseMoveEvent(event)

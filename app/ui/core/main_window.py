@@ -19,8 +19,8 @@ from PySide6.QtGui import (QAction, QBrush, QColor, QConicalGradient,
 from PySide6.QtWidgets import (QApplication, QDockWidget, QGraphicsView, QGridLayout,
     QGroupBox, QHBoxLayout, QLabel, QListView,
     QListWidgetItem, QMainWindow, QMenu, QMenuBar,
-    QSizePolicy, QSpacerItem, QTabWidget, QVBoxLayout,
-    QWidget)
+    QSizePolicy, QSlider, QSpacerItem, QTabWidget,
+    QVBoxLayout, QWidget)
 
 from qfluentwidgets import (CheckBox, LineEdit, ListWidget, PrimaryPushButton,
     ProgressBar, PushButton, Slider, TransparentToolButton)
@@ -126,7 +126,7 @@ class Ui_MainWindow(object):
         self.verticalLayoutMediaControls.setObjectName(u"verticalLayoutMediaControls")
         self.horizontalLayoutMediaSlider = QHBoxLayout()
         self.horizontalLayoutMediaSlider.setObjectName(u"horizontalLayoutMediaSlider")
-        self.videoSeekSlider = Slider(self.mediaLayout)
+        self.videoSeekSlider = QSlider(self.mediaLayout)
         self.videoSeekSlider.setObjectName(u"videoSeekSlider")
         self.videoSeekSlider.setOrientation(Qt.Orientation.Horizontal)
 
