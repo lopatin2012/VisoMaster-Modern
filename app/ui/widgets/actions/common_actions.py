@@ -11,17 +11,17 @@ from PySide6 import QtWidgets,QtCore,QtGui
 from app.ui.widgets import widget_components
 from app.ui.widgets.settings_layout_data import SETTINGS_LAYOUT_DATA
 import app.helpers.miscellaneous as misc_helpers
-from app.helpers import perf
+from app.helpers import perf, i18n
 if TYPE_CHECKING:
     from app.ui.main_ui import MainWindow
     
 @QtCore.Slot(str, str, QtWidgets.QWidget)
 def create_and_show_messagebox(main_window: 'MainWindow', window_title: str, message: str, parent_widget: QtWidgets.QWidget):
     messagebox = QtWidgets.QMessageBox(parent_widget)
-    messagebox.setWindowTitle(window_title)
+    messagebox.setWindowTitle(i18n.tr(window_title))
     messagebox.setWindowIcon(QtGui.QIcon(u":/media/media/visomaster_small.png"))
 
-    messagebox.setText(message)
+    messagebox.setText(i18n.tr(message))
     messagebox.exec_()
 
 def create_and_show_toast_message(main_window: 'MainWindow', title: str, message: str, style_type='information'):

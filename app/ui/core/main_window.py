@@ -690,7 +690,7 @@ class Ui_MainWindow(object):
     # setupUi
 
     def retranslateUi(self, MainWindow):
-        MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"VisoMaster v0.1.5", None))
+        MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"VisoMaster-Modern", None))
         self.actionExit.setText(QCoreApplication.translate("MainWindow", u"Exit", None))
         self.actionLoad_Embeddings.setText(QCoreApplication.translate("MainWindow", u"Load Embeddings", None))
         self.actionSave_Embeddings.setText(QCoreApplication.translate("MainWindow", u"Save Embeddings", None))

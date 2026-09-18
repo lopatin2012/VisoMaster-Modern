@@ -25,6 +25,12 @@ VisoMaster-Modern: fork of VisoMaster, a PySide6 desktop app for AI face swappin
 - qfw quirks: `SwitchButton` emits `checkedChanged` (not `toggled`) and is not a `QPushButton`; `ComboBox` is `QPushButton`-based, not a `QComboBox`; all qfw constructors are `(parent=None)` and reject stray kwargs — pass `kwargs.get('parent')` explicitly.
 - Theme: `app/ui/styles/fluent_theme.py` sets the qfw theme/accent. `main.py` and `control_actions.change_theme` still apply `qdarktheme` + `app/ui/styles/{dark,light}_styles.qss` for the standard Qt widgets that qfw doesn't replace (docks, tabs, lists, menus).
 
+## Localization (i18n)
+- `app/helpers/i18n.py` holds a dict-based i18n: English source strings are the keys, `tr()` looks them up for the current language, saved via `QSettings`.
+- Translation is applied in three places: `main_ui` loads/applies at startup, `layout_actions` uses `i18n.set_widget_text/set_widget_tooltip` for LAYOUT_DATA labels/help/group titles, and `control_actions.change_language` re-applies live (widgets keep the English source in the `_i18n_src`/`_i18n_tip` properties so switching back works).
+- Never translate dropdown `options` — they are functional values compared in code (models, `Dark/Light`, `Opal/Pearl/Optimal`, ...). Translate only `label`/`help`, `.ui` strings and user-facing messages.
+- To localize a new string: wrap it with `i18n.tr(...)` (or `set_widget_text`) and add an entry to `TRANSLATIONS` in `i18n.py`. `README.ru.md` mirrors `README.md`.
+
 ## Generated UI files - do not hand-edit
 - `app/ui/core/main_window.py` comes from `MainWindow.ui`, and `app/ui/core/media_rc.py` from `media.qrc`.
 - Regenerate with `app/ui/core/convert_ui_to_py.bat` (`pyside6-uic` + `pyside6-rcc`, then fixes an import). `Start.bat` reruns this on every launch.

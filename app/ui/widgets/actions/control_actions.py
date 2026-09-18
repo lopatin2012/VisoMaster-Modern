@@ -8,11 +8,18 @@ if TYPE_CHECKING:
     from app.ui.main_ui import MainWindow
 from app.ui.widgets.actions import common_actions as common_widget_actions
 from app.ui.styles.fluent_theme import apply_fluent_theme
+from app.helpers import i18n
 
 #'''
 #    Define functions here that has to be executed when value of a control widget (In the settings tab) is changed.
 #    The first two parameters should be the MainWindow object and the new value of the control 
 #'''
+
+def change_language(main_window: 'MainWindow', selected_language):
+    i18n.set_language(i18n.code_for_display_name(selected_language))
+    i18n.apply_to_widgets(main_window)
+    main_window.update()
+
 
 def change_execution_provider(main_window: 'MainWindow', new_provider):
     main_window.video_processor.stop_processing()

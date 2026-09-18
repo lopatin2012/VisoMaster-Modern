@@ -26,6 +26,7 @@ from app.ui.widgets.swapper_layout_data import SWAPPER_LAYOUT_DATA
 from app.ui.widgets.settings_layout_data import SETTINGS_LAYOUT_DATA
 from app.ui.widgets.face_editor_layout_data import FACE_EDITOR_LAYOUT_DATA
 from app.helpers.miscellaneous import DFM_MODELS_DATA, ParametersDict
+from app.helpers import i18n
 from app.helpers.typing_helper import FacesParametersTypes, ParametersTypes, ControlTypes, MarkerTypes
 
 ParametersWidgetTypes = Dict[str, widget_components.ToggleButton|widget_components.SelectionBox|widget_components.ParameterDecimalSlider|widget_components.ParameterSlider|widget_components.ParameterText]
@@ -207,6 +208,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
         self.setupUi(self)
+        # Apply the saved interface language before widgets are created from LAYOUT_DATA.
+        i18n.load_language()
+        i18n.apply_to_widgets(self)
         self.initialize_variables()
         self.initialize_widgets()
         self.load_last_workspace()

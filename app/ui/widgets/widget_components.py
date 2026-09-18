@@ -18,6 +18,7 @@ from app.ui.widgets.actions import card_actions
 from app.ui.widgets.actions import list_view_actions
 from app.ui.widgets.actions import save_load_actions
 import app.helpers.miscellaneous as misc_helpers
+from app.helpers import i18n
 
 if TYPE_CHECKING:
     from app.ui.main_ui import MainWindow
@@ -740,9 +741,9 @@ class CreateEmbeddingDialog(QtWidgets.QDialog):
 
         # Create layout and add widgets
         layout = QtWidgets.QVBoxLayout()
-        layout.addWidget(QtWidgets.QLabel("Embedding Name:"))
+        layout.addWidget(QtWidgets.QLabel(i18n.tr("Embedding Name:")))
         layout.addWidget(self.embed_name_edit)
-        layout.addWidget(QtWidgets.QLabel("Merge Type:"))
+        layout.addWidget(QtWidgets.QLabel(i18n.tr("Merge Type:")))
         layout.addWidget(self.merge_type_selection)
         layout.addWidget(self.buttonBox)
 
@@ -810,7 +811,7 @@ class LoadingDialog(QtWidgets.QDialog):
         )
 
         # Message Label
-        self.label = QtWidgets.QLabel(message)
+        self.label = QtWidgets.QLabel(i18n.tr(message))
         self.label.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.label.setWordWrap(True)  # Allow text to wrap within the dialog
         self.label.setStyleSheet("""
@@ -842,7 +843,7 @@ class LoadLastWorkspaceDialog(QtWidgets.QDialog):
 
         # Create layout and add widgets
         layout = QtWidgets.QVBoxLayout()
-        layout.addWidget(QtWidgets.QLabel("Do you want to load your last workspace?"))
+        layout.addWidget(QtWidgets.QLabel(i18n.tr("Do you want to load your last workspace?")))
         layout.addWidget(self.buttonBox)
 
         # Set dialog layout

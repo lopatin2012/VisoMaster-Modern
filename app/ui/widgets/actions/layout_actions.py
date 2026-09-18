@@ -12,6 +12,7 @@ from app.ui.widgets.actions import video_control_actions
 from app.ui.widgets import widget_components
 # from app.UI.Widgets.WidgetComponents import *
 from app.helpers.typing_helper import LayoutDictTypes
+from app.helpers import i18n
 
 def add_widgets_to_tab_layout(main_window: 'MainWindow', LAYOUT_DATA: LayoutDictTypes, layoutWidget: QtWidgets.QVBoxLayout, data_type='parameter'):
     layout = QtWidgets.QVBoxLayout()
@@ -33,14 +34,16 @@ def add_widgets_to_tab_layout(main_window: 'MainWindow', LAYOUT_DATA: LayoutDict
         return horizontal_layout
 
     for category, widgets in LAYOUT_DATA.items():
-        group_box = widget_components.FormGroupBox(main_window, title=category)
+        group_box = widget_components.FormGroupBox(main_window, title=i18n.tr(category))
+        group_box.setProperty("_i18n_src", category)
         category_layout = QtWidgets.QFormLayout()
         group_box.setLayout(category_layout)
 
         for widget_name, widget_data in widgets.items():
             spacing_level = widget_data['level']
-            label = QtWidgets.QLabel(widget_data['label'])
-            label.setToolTip(widget_data['help'])
+            label = QtWidgets.QLabel()
+            i18n.set_widget_text(label, widget_data['label'])
+            i18n.set_widget_tooltip(label, widget_data['help'])
 
             # Create a horizontal layout for the toggle button and its label
             if 'Toggle' in widget_name:

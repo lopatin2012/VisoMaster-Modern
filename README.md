@@ -1,6 +1,8 @@
 
 # VisoMaster-Modern
 
+**English** | [Русский](README.ru.md)
+
 > **VisoMaster-Modern** is a community fork of [VisoMaster](https://github.com/visomaster/VisoMaster),
 > modernized for recent NVIDIA GPUs (CUDA 12.9/cu129, Blackwell `sm_120`) and up-to-date runtimes
 > (torch 2.8, onnxruntime-gpu 1.23, TensorRT 10.13, PySide6 6.10 + qfluentwidgets).

@@ -1,6 +1,7 @@
 from app.ui.widgets.actions import control_actions
 import cv2
 from app.helpers.typing_helper import LayoutDictTypes
+from app.helpers import i18n
 SETTINGS_LAYOUT_DATA: LayoutDictTypes = {
     'Appearance': {
         'ThemeSelection': {
@@ -10,6 +11,15 @@ SETTINGS_LAYOUT_DATA: LayoutDictTypes = {
             'default': 'Dark',
             'help': 'Select the theme to be used',
             'exec_function': control_actions.change_theme,
+            'exec_function_args': [],
+        },
+        'LanguageSelection': {
+            'level': 1,
+            'label': 'Language',
+            'options': ['English', 'Русский'],
+            'default': lambda: i18n.language_display_name(),
+            'help': 'Select the interface language',
+            'exec_function': control_actions.change_language,
             'exec_function_args': [],
         },
     },
