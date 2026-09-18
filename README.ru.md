@@ -1,6 +1,6 @@
 # VisoMaster-Modern
 
-[English](README.md) | **Русский**
+[English](README.md) | **Русский** | [中文](README.zh.md)
 
 > **VisoMaster-Modern** — форк проекта [VisoMaster](https://github.com/visomaster/VisoMaster),
 > адаптированный под современные видеокарты NVIDIA (CUDA 12.9/cu129, Blackwell `sm_120`) и актуальные
