@@ -44,6 +44,7 @@ def main():
     try:
         from app.helpers import i18n
         from app.ui import main_ui
+        from app.version import APP_VERSION
     except Exception as exc:  # noqa: BLE001
         print(f"  [FAIL] import failed: {exc!r}")
         return 2
@@ -63,6 +64,7 @@ def main():
         return 2
 
     check(bool(window.windowTitle()), "window title is set")
+    check(APP_VERSION in window.windowTitle(), f"window title contains version {APP_VERSION}")
     check(window.tabWidget.count() == 4, "Control Options has 4 tabs")
     check(len(window.parameter_widgets) > 20, "parameter widgets were created")
 

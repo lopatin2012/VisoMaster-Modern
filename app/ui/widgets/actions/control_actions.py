@@ -9,6 +9,7 @@ if TYPE_CHECKING:
 from app.ui.widgets.actions import common_actions as common_widget_actions
 from app.ui.styles.fluent_theme import apply_fluent_theme
 from app.helpers import i18n
+from app.version import APP_NAME, APP_VERSION
 
 #'''
 #    Define functions here that has to be executed when value of a control widget (In the settings tab) is changed.
@@ -69,6 +70,8 @@ def set_theme_from_menu(main_window: 'MainWindow', new_theme):
 def show_about(main_window: 'MainWindow'):
     from qfluentwidgets import MessageBox
     content = "\n".join([
+        f"{APP_NAME} {APP_VERSION}",
+        "",
         i18n.tr("AI face swapping and editing for images, videos and webcam."),
         "",
         i18n.tr("License: GPL-3.0 (see LICENSE). Original VisoMaster by its authors."),

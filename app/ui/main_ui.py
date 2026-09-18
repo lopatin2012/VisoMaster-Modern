@@ -27,6 +27,7 @@ from app.ui.widgets.settings_layout_data import SETTINGS_LAYOUT_DATA
 from app.ui.widgets.face_editor_layout_data import FACE_EDITOR_LAYOUT_DATA
 from app.helpers.miscellaneous import DFM_MODELS_DATA, ParametersDict
 from app.helpers import i18n
+from app.version import APP_NAME, APP_VERSION
 from app.helpers.typing_helper import FacesParametersTypes, ParametersTypes, ControlTypes, MarkerTypes
 
 ParametersWidgetTypes = Dict[str, widget_components.ToggleButton|widget_components.SelectionBox|widget_components.ParameterDecimalSlider|widget_components.ParameterSlider|widget_components.ParameterText]
@@ -215,6 +216,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         i18n.load_language()
         i18n.apply_to_widgets(self)
         self.setWindowIcon(QtGui.QIcon("app/ui/core/media/modern_icon.png"))
+        window_title = f"{APP_NAME} {APP_VERSION}"
+        self.setProperty("_i18n_title", window_title)
+        self.setWindowTitle(window_title)
         self._restore_window_geometry()
         self.initialize_variables()
         self.initialize_widgets()
