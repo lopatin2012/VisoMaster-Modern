@@ -186,6 +186,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         layout_actions.add_widgets_to_tab_layout(self, LAYOUT_DATA=SETTINGS_LAYOUT_DATA, layoutWidget=self.settingsWidgetsLayout, data_type='control')
         layout_actions.add_widgets_to_tab_layout(self, LAYOUT_DATA=FACE_EDITOR_LAYOUT_DATA, layoutWidget=self.faceEditorWidgetsLayout, data_type='parameter')
 
+        # Theme and Language live in the top menu bar, not the Settings tab.
+        layout_actions.set_up_settings_menu(self)
+
         # Set up output folder select button (It is inside the settings tab Widget)
         self.outputFolderButton.clicked.connect(partial(list_view_actions.select_output_media_folder, self))
         # Create a control value for OutputMediaFolder

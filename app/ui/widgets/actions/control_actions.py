@@ -59,6 +59,11 @@ def change_theme(main_window: 'MainWindow', new_theme):
 
     main_window.update()  # Aggiorna la finestra principale
 
+
+def set_theme_from_menu(main_window: 'MainWindow', new_theme):
+    main_window.control['ThemeSelection'] = new_theme
+    change_theme(main_window, new_theme)
+
 def set_video_playback_fps(main_window: 'MainWindow', set_video_fps=False):
     # print("Called set_video_playback_fps()")
     if set_video_fps and main_window.video_processor.media_capture:

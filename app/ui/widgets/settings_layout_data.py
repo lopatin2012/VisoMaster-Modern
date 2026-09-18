@@ -1,28 +1,9 @@
 from app.ui.widgets.actions import control_actions
 import cv2
 from app.helpers.typing_helper import LayoutDictTypes
-from app.helpers import i18n
+# Note: Theme and Language live in the top menu bar (see layout_actions.set_up_settings_menu),
+# not in this Settings tab.
 SETTINGS_LAYOUT_DATA: LayoutDictTypes = {
-    'Appearance': {
-        'ThemeSelection': {
-            'level': 1,
-            'label': 'Theme',
-            'options': ['Dark', 'Dark-Blue', 'Light'],
-            'default': 'Dark',
-            'help': 'Select the theme to be used',
-            'exec_function': control_actions.change_theme,
-            'exec_function_args': [],
-        },
-        'LanguageSelection': {
-            'level': 1,
-            'label': 'Language',
-            'options': ['English', 'Русский'],
-            'default': lambda: i18n.language_display_name(),
-            'help': 'Select the interface language',
-            'exec_function': control_actions.change_language,
-            'exec_function_args': [],
-        },
-    },
     'General': {
         'ProvidersPrioritySelection': {
             'level': 1,

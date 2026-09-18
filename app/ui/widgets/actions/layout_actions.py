@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 from functools import partial
 
-from PySide6 import QtWidgets, QtCore
+from PySide6 import QtWidgets, QtCore, QtGui
 if TYPE_CHECKING:
     from app.ui.main_ui import MainWindow
 from app.ui.widgets.actions import common_actions as common_widget_actions
@@ -311,6 +311,62 @@ def set_up_menu_actions(main_window: 'MainWindow'):
     main_window.actionSave_Embeddings.triggered.connect(partial(save_load_actions.save_embeddings_to_file, main_window))
     main_window.actionSave_Embeddings_As.triggered.connect(partial(save_load_actions.save_embeddings_to_file, main_window))
     main_window.actionView_Fullscreen_F11.triggered.connect(partial(video_control_actions.view_fullscreen, main_window))
+
+def set_up_settings_menu(main_window: 'MainWindow'):
+    """Add a top-level Settings menu with Theme and Language submenus.
+
+    These used to be controls in the Settings tab; they now live in the menu bar.
+    The menu stays in sync via `aboutToShow` so changes made elsewhere are reflected.
+    """
+    from app.ui.widgets.actions import control_actions
+
+    menu_bar = main_window.topMenuBar
+    settings_menu = menu_bar.addMenu(i18n.tr("Settings"))
+    settings_menu.setProperty("_i18n_src", "Settings")
+
+    # Theme
+    theme_menu = settings_menu.addMenu(i18n.tr("Theme"))
+    theme_menu.setProperty("_i18n_src", "Theme")
+    theme_group = QtGui.QActionGroup(main_window)
+    theme_group.setExclusive(True)
+    theme_actions = {}
+    for theme_name in ("Dark", "Dark-Blue", "Light"):
+        action = QtGui.QAction(theme_name, main_window)
+        action.setCheckable(True)
+        theme_group.addAction(action)
+        action.triggered.connect(partial(control_actions.set_theme_from_menu, main_window, theme_name))
+        theme_menu.addAction(action)
+        theme_actions[theme_name] = action
+
+    def _sync_theme():
+        current = main_window.control.get("ThemeSelection", "Dark")
+        for name, action in theme_actions.items():
+            action.setChecked(name == current)
+
+    theme_menu.aboutToShow.connect(_sync_theme)
+    _sync_theme()
+
+    # Language
+    language_menu = settings_menu.addMenu(i18n.tr("Language"))
+    language_menu.setProperty("_i18n_src", "Language")
+    language_group = QtGui.QActionGroup(main_window)
+    language_group.setExclusive(True)
+    language_actions = {}
+    for _code, display_name in i18n.LANGUAGES:
+        action = QtGui.QAction(display_name, main_window)
+        action.setCheckable(True)
+        language_group.addAction(action)
+        action.triggered.connect(partial(control_actions.change_language, main_window, display_name))
+        language_menu.addAction(action)
+        language_actions[display_name] = action
+
+    def _sync_language():
+        current = i18n.language_display_name()
+        for display_name, action in language_actions.items():
+            action.setChecked(display_name == current)
+
+    language_menu.aboutToShow.connect(_sync_language)
+    _sync_language()
 
 def disable_all_parameters_and_control_widget(main_window: 'MainWindow'):
     # Disable all bottom buttons
