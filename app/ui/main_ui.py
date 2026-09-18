@@ -220,9 +220,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         window_title = f"{APP_NAME} {APP_VERSION}"
         self.setProperty("_i18n_title", window_title)
         self.setWindowTitle(window_title)
-        self._restore_window_geometry()
         self.initialize_variables()
         self.initialize_widgets()
+        self._restore_ui_state()
         # Defer until after the window is shown so the fluent dialog has a visible parent.
         QtCore.QTimer.singleShot(0, self.load_last_workspace)
 
@@ -267,10 +267,22 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             case QtCore.Qt.Key_S:
                 self.swapfacesButton.click()
 
-    def _restore_window_geometry(self):
-        geometry = QtCore.QSettings("VisoMaster-Modern", "VisoMaster-Modern").value("ui/geometry")
+    def _ui_settings(self):
+        return QtCore.QSettings("VisoMaster-Modern", "VisoMaster-Modern")
+
+    def _restore_ui_state(self):
+        settings = self._ui_settings()
+        geometry = settings.value("ui/geometry")
         if geometry is not None:
             self.restoreGeometry(geometry)
+        for key, checkbox in (
+            ("ui/panel_params", self.parametersPanelCheckBox),
+            ("ui/panel_faces", self.facesPanelCheckBox),
+            ("ui/panel_media", self.mediaPanelCheckBox),
+        ):
+            value = settings.value(key)
+            if value is not None:
+                checkbox.setChecked(str(value) in ("true", "True", "1"))
 
     def closeEvent(self, event):
         print("MainWindow: closeEvent called.")
@@ -280,7 +292,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         list_view_actions.clear_stop_loading_target_media(self)
 
         save_load_actions.save_current_workspace(self, 'last_workspace.json')
-        QtCore.QSettings("VisoMaster-Modern", "VisoMaster-Modern").setValue("ui/geometry", self.saveGeometry())
+        settings = self._ui_settings()
+        settings.setValue("ui/geometry", self.saveGeometry())
+        settings.setValue("ui/panel_params", self.parametersPanelCheckBox.isChecked())
+        settings.setValue("ui/panel_faces", self.facesPanelCheckBox.isChecked())
+        settings.setValue("ui/panel_media", self.mediaPanelCheckBox.isChecked())
         # Optionally handle the event if needed
         event.accept()
 

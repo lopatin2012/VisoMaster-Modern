@@ -852,10 +852,6 @@ class LoadingDialog(QtWidgets.QDialog):
         layout.addWidget(self.label)
         self.setLayout(layout)
 
-# Custom progress dialog
-class ProgressDialog(QtWidgets.QProgressDialog):
-    pass
-
 class LoadLastWorkspaceDialog(qfw.MessageBox):
     def __init__(self, main_window: 'MainWindow',):
         super().__init__(
