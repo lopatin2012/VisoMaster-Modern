@@ -1,5 +1,6 @@
 from PySide6 import QtWidgets, QtGui, QtCore
 from typing import TYPE_CHECKING
+from app.helpers import perf
 if TYPE_CHECKING:
     from app.ui.main_ui import MainWindow
 
@@ -51,6 +52,9 @@ def update_graphics_view(main_window: 'MainWindow', pixmap: QtGui.QPixmap, curre
         fit_image_to_view(main_window, pixmap_item, scene_rect) # Pass pixmap_item here
     # else: # No longer need to restore transform if we are not clearing scene
     #     zoom_andfit_image_to_view_onchange(main_window, current_transform) # No longer needed
+
+
+update_graphics_view = perf.wrap(update_graphics_view, "display_graphics")
 
 
 def zoom_andfit_image_to_view_onchange(main_window: 'MainWindow', new_transform):

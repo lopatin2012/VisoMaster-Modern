@@ -11,6 +11,7 @@ from PySide6 import QtWidgets,QtCore,QtGui
 from app.ui.widgets import widget_components
 from app.ui.widgets.settings_layout_data import SETTINGS_LAYOUT_DATA
 import app.helpers.miscellaneous as misc_helpers
+from app.helpers import perf
 if TYPE_CHECKING:
     from app.ui.main_ui import MainWindow
     
@@ -226,16 +227,17 @@ def show_hide_related_widgets(main_window: 'MainWindow', parent_widget, parent_w
 
 # @misc_helpers.benchmark    
 def get_pixmap_from_frame(main_window: 'MainWindow', frame: np.ndarray):
-    height, width, channel = frame.shape
-    if channel == 2:
-        # Frame in grayscale
-        bytes_per_line = width
-        q_img = QtGui.QImage(frame.data, width, height, bytes_per_line, QtGui.QImage.Format.Format_Grayscale8)
-    else:
-        # Frame in color
-        bytes_per_line = 3 * width
-        q_img = QtGui.QImage(frame.data, width, height, bytes_per_line, QtGui.QImage.Format.Format_RGB888).rgbSwapped()
-    pixmap = QtGui.QPixmap.fromImage(q_img)
+    with perf.timer("preview_pixmap"):
+        height, width, channel = frame.shape
+        if channel == 2:
+            # Frame in grayscale
+            bytes_per_line = width
+            q_img = QtGui.QImage(frame.data, width, height, bytes_per_line, QtGui.QImage.Format.Format_Grayscale8)
+        else:
+            # Frame is BGR here; Format_BGR888 avoids an extra rgbSwapped() full-frame copy.
+            bytes_per_line = 3 * width
+            q_img = QtGui.QImage(frame.data, width, height, bytes_per_line, QtGui.QImage.Format.Format_BGR888)
+        pixmap = QtGui.QPixmap.fromImage(q_img)
     return pixmap
 
 
