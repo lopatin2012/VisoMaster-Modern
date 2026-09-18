@@ -214,6 +214,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         # Apply the saved interface language before widgets are created from LAYOUT_DATA.
         i18n.load_language()
         i18n.apply_to_widgets(self)
+        self._restore_window_geometry()
         self.initialize_variables()
         self.initialize_widgets()
         self.load_last_workspace()
@@ -259,6 +260,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             case QtCore.Qt.Key_S:
                 self.swapfacesButton.click()
 
+    def _restore_window_geometry(self):
+        geometry = QtCore.QSettings("VisoMaster-Modern", "VisoMaster-Modern").value("ui/geometry")
+        if geometry is not None:
+            self.restoreGeometry(geometry)
+
     def closeEvent(self, event):
         print("MainWindow: closeEvent called.")
 
@@ -267,6 +273,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         list_view_actions.clear_stop_loading_target_media(self)
 
         save_load_actions.save_current_workspace(self, 'last_workspace.json')
+        QtCore.QSettings("VisoMaster-Modern", "VisoMaster-Modern").setValue("ui/geometry", self.saveGeometry())
         # Optionally handle the event if needed
         event.accept()
 

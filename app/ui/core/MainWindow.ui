@@ -986,7 +986,7 @@
      <item row="0" column="0">
       <layout class="QHBoxLayout" name="horizontalLayout_2">
        <item>
-        <widget class="ProgressBar" name="vramProgressBar">
+            <widget class="QProgressBar" name="vramProgressBar">
          <property name="value">
           <number>24</number>
          </property>

@@ -16,7 +16,8 @@ from app.helpers import i18n
 #'''
 
 def change_language(main_window: 'MainWindow', selected_language):
-    i18n.set_language(i18n.code_for_display_name(selected_language))
+    code = i18n.set_language(i18n.code_for_display_name(selected_language))
+    i18n.install_qt_translations(QtWidgets.QApplication.instance(), code)
     i18n.apply_to_widgets(main_window)
     main_window.update()
 

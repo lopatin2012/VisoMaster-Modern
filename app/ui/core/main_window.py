@@ -19,8 +19,8 @@ from PySide6.QtGui import (QAction, QBrush, QColor, QConicalGradient,
 from PySide6.QtWidgets import (QApplication, QDockWidget, QGraphicsView, QGridLayout,
     QGroupBox, QHBoxLayout, QLabel, QListView,
     QListWidgetItem, QMainWindow, QMenu, QMenuBar,
-    QSizePolicy, QSlider, QSpacerItem, QTabWidget,
-    QVBoxLayout, QWidget)
+    QProgressBar, QSizePolicy, QSlider, QSpacerItem,
+    QTabWidget, QVBoxLayout, QWidget)
 
 from qfluentwidgets import (CheckBox, LineEdit, ListWidget, PrimaryPushButton,
     ProgressBar, PushButton, Slider, TransparentToolButton)
@@ -634,7 +634,7 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_2 = QHBoxLayout()
         self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
-        self.vramProgressBar = ProgressBar(self.dockWidgetContents_2)
+        self.vramProgressBar = QProgressBar(self.dockWidgetContents_2)
         self.vramProgressBar.setObjectName(u"vramProgressBar")
         self.vramProgressBar.setValue(24)
 

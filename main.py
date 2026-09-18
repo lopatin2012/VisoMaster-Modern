@@ -15,6 +15,7 @@ import qdarktheme
 from app.ui.core.proxy_style import ProxyStyle
 from app.ui.styles.fluent_theme import apply_fluent_theme
 from app.helpers.miscellaneous import ensure_ffmpeg_in_path
+from app.helpers import i18n
 
 # Use the bundled dependencies/ffmpeg(.exe) when running without Start*.bat.
 ensure_ffmpeg_in_path()
@@ -30,6 +31,7 @@ if __name__=="__main__":
 
     app = QtWidgets.QApplication(sys.argv)
     app.setStyle(ProxyStyle())
+    i18n.install_qt_translations(app, i18n.load_language())
     apply_fluent_theme("Dark")
     with open("app/ui/styles/dark_styles.qss", "r") as f:
         _style = f.read()

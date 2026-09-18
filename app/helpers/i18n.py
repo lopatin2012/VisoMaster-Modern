@@ -15,6 +15,7 @@ _DEFAULT = "en"
 _current = _DEFAULT
 
 _SETTINGS = QtCore.QSettings("VisoMaster-Modern", "VisoMaster-Modern")
+_qt_translator = None
 
 
 def get_language() -> str:
@@ -53,6 +54,24 @@ def tr(text):
     if _current == "en":
         return text
     return TRANSLATIONS.get(_current, {}).get(text, text)
+
+
+def install_qt_translations(app, language_code: str) -> None:
+    """Install Qt's own translations so standard dialogs (OK/Cancel, file/color
+    pickers, ...) use the selected language instead of English.
+    """
+    global _qt_translator
+    if _qt_translator is not None:
+        app.removeTranslator(_qt_translator)
+        _qt_translator = None
+    if not language_code or language_code == "en":
+        return
+    translations_path = QtCore.QLibraryInfo.path(QtCore.QLibraryInfo.LibraryPath.TranslationsPath)
+    translator = QtCore.QTranslator()
+    if translator.load(f"qtbase_{language_code}", translations_path) or \
+            translator.load(f"qt_{language_code}", translations_path):
+        app.installTranslator(translator)
+        _qt_translator = translator
 
 
 # --- widget helpers -----------------------------------------------------------------
