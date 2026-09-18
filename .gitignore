@@ -1,0 +1,59 @@
+**/__pycache__/**
+
+*.ckpt
+*.pth
+*.onnx
+*.engine
+*.profile
+*.timing
+*.dfm
+*.trt
+models/liveportrait_onnx/*.onnx
+models/liveportrait_onnx/*.trt
+saved_parameters*.json
+startup_parameters*.json
+data.json
+merged_embeddings*.txt
+.vs
+*.sln
+*.pyproj
+*.json
+.vscode/
+tensorrt-engines/
+source_videos/
+source_images/
+output/
+test_frames*/
+test_videos*/
+install.dat
+visomaster.ico
+dependencies/CUDA/
+dependencies/Python/
+dependencies/git-portable/
+dependencies/TensorRT/
+*.mp4
+*.jpg
+*.exe
+.thumbnails
+
+# --- VisoMaster-Modern fork additions ---
+# Local virtual environments
+.venv/
+venv/
+env/
+
+# Model assets are downloaded separately (download_models.py + visomaster-assets release),
+# never commit the weights. Keep only the directory placeholders.
+/model_assets/**
+!/model_assets/**/
+!/model_assets/**/.gitkeep
+
+# Portable runtime and downloaded binaries (Python/CUDA/TensorRT/ffmpeg/git-portable)
+/dependencies/**
+!/dependencies/.gitkeep
+
+# Tool caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
