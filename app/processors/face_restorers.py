@@ -10,6 +10,9 @@ from skimage import transform as trans
 if TYPE_CHECKING:
     from app.processors.models_processor import ModelsProcessor
 
+logger = logging.getLogger(__name__)
+
+
 class FaceRestorers:
     def __init__(self, models_processor: 'ModelsProcessor'):
         self.models_processor = models_processor
@@ -31,8 +34,8 @@ class FaceRestorers:
             elif restorer_det_type == 'Reference':
                 try:
                     dst, _, _ = self.models_processor.run_detect_landmark(swapped_face_upscaled, bbox=np.array([0, 0, 512, 512]), det_kpss=[], detect_mode='5', score=detect_score/100.0, from_points=False)
-                except Exception as e: # pylint: disable=broad-except
-                    print(f"exception: {e}")
+                except Exception as e:  # pylint: disable=broad-except
+                    logger.warning("Landmark detection for restorer failed: %s", e)
                     return swapped_face_upscaled
 
             # Return non-enhanced face if keypoints are empty
@@ -43,7 +46,7 @@ class FaceRestorers:
             try:
                 tform.estimate(dst, self.models_processor.FFHQ_kps)
             except Exception:  # pylint: disable=broad-exception-caught
-                logging.getLogger(__name__).debug("SimilarityTransform.estimate failed", exc_info=True)
+                logger.debug("SimilarityTransform.estimate failed", exc_info=True)
                 return swapped_face_upscaled
             # Transform, scale, and normalize
             temp = v2.functional.affine(swapped_face_upscaled, tform.rotation*57.2958, (tform.translation[0], tform.translation[1]) , tform.scale, 0, center = (0,0) )

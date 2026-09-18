@@ -15,10 +15,18 @@ import sys
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
+import faulthandler  # noqa: E402
+import gc  # noqa: E402
+
+faulthandler.enable()
+gc.disable()  # avoid GC-triggered C++ teardown while CUDA/Qt are alive
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 os.chdir(ROOT)
 if ROOT not in sys.path:
     sys.path.insert(0, ROOT)
+
+from app.helpers.process_exit import hard_exit  # noqa: E402
 
 import torch  # noqa: E402  # must precede PySide6
 
@@ -47,7 +55,8 @@ def main():
         from app.version import APP_VERSION
     except Exception as exc:  # noqa: BLE001
         print(f"  [FAIL] import failed: {exc!r}")
-        return 2
+        sys.stdout.flush()
+        hard_exit(2)
 
     if not torch.cuda.is_available():
         print("  [!] CUDA is not available; ModelsProcessor may fail to construct.")
@@ -61,7 +70,8 @@ def main():
         import traceback
         traceback.print_exc()
         print(f"  [FAIL] MainWindow() raised: {exc!r}")
-        return 2
+        sys.stdout.flush()
+        hard_exit(2)
 
     check(bool(window.windowTitle()), "window title is set")
     check(APP_VERSION in window.windowTitle(), f"window title contains version {APP_VERSION}")
@@ -111,12 +121,35 @@ def main():
         i18n.apply_to_widgets(window)
 
     print(f"\n{'PASS' if not FAILURES else 'FAIL'}: {len(FAILURES)} failure(s)")
-    return 0 if not FAILURES else 1
+    # Hard exit right here: CUDA/torch teardown after Qt segfaults during finalization
+    # (see main.py). Doing it before returning keeps the exit code deterministic.
+    sys.stdout.flush()
+    sys.stderr.flush()
+    hard_exit(0 if not FAILURES else 1)
+
+
+def _run_in_parent() -> int:
+    """Run the checks in a child process and derive a deterministic exit code.
+
+    The child loads CUDA/Qt, whose DLL detach can crash during process teardown on
+    Windows (after the result was already printed). The parent stays lightweight and
+    reports based on the child's stdout.
+    """
+    import subprocess
+
+    child = subprocess.run(
+        [sys.executable, os.path.abspath(__file__), "--child"],
+        capture_output=True, text=True, encoding="utf-8", errors="replace",
+    )
+    sys.stdout.write(child.stdout)
+    ok = "PASS:" in child.stdout and "FAIL:" not in child.stdout
+    if not ok:
+        sys.stderr.write(child.stderr)
+    return 0 if ok else 1
 
 
 if __name__ == "__main__":
-    code = main()
-    sys.stdout.flush()
-    sys.stderr.flush()
-    # Hard exit: CUDA/torch teardown after Qt segfaults during finalization (see main.py).
-    os._exit(code)
+    if "--child" in sys.argv:
+        main()  # runs the checks and hard-exits inside
+    else:
+        sys.exit(_run_in_parent())

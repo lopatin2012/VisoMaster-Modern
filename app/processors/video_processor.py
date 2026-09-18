@@ -46,8 +46,8 @@ def _detect_h264_encoder() -> str:
             )
             if "h264_nvenc" in (result.stdout or ""):
                 _H264_ENCODER = "h264_nvenc"
-        except Exception:
-            pass
+        except Exception:  # pylint: disable=broad-exception-caught
+            logger.debug("h264_nvenc detection failed; falling back to libx264", exc_info=True)
         print(f"Video encoder: {_H264_ENCODER}")
     return _H264_ENCODER
 
@@ -174,8 +174,8 @@ class VideoProcessor(QObject):
             try:
                 self.virtcam.send(frame)
                 self.virtcam.sleep_until_next_frame()
-            except Exception as e:
-                print(e)
+            except Exception as e:  # pylint: disable=broad-exception-caught
+                logger.warning("Virtual camera send failed: %s", e)
 
     def set_number_of_threads(self, value):
         self.stop_processing()
@@ -232,7 +232,12 @@ class VideoProcessor(QObject):
                 self.gpu_memory_update_timer.start(5000) #Update GPU memory progressbar every 5 Seconds
 
             else:
-                print("Error: Unable to open the video.")
+                logger.error("Unable to open the media (capture is not opened)")
+                self.main_window.display_messagebox_signal.emit(
+                    i18n.tr("Cannot Open Media"),
+                    i18n.tr("Could not open the selected file."),
+                    self.main_window,
+                )
                 self.processing = False
                 self.frame_read_timer.stop()
                 video_control_actions.set_play_button_icon_to_play(self.main_window)
@@ -274,7 +279,7 @@ class VideoProcessor(QObject):
                 self.start_frame_worker(self.current_frame_number, frame)
                 self.current_frame_number += 1
             else:
-                print("Cannot read frame!", self.current_frame_number)
+                logger.error("Cannot read frame! %s", self.current_frame_number)
                 self.stop_processing()
                 self.main_window.display_messagebox_signal.emit('Error Reading Frame', f'Error Reading Frame {self.current_frame_number}.\n Stopped Processing...!', self.main_window)
 
@@ -303,7 +308,7 @@ class VideoProcessor(QObject):
                 
                 self.media_capture.set(cv2.CAP_PROP_POS_FRAMES, self.current_frame_number)
             else:
-                print("Cannot read frame!", self.current_frame_number)
+                logger.error("Cannot read frame! %s", self.current_frame_number)
                 self.main_window.display_messagebox_signal.emit('Error Reading Frame', f'Error Reading Frame {self.current_frame_number}.', self.main_window)
 
         # """Process a single image frame directly without queuing."""
@@ -316,7 +321,12 @@ class VideoProcessor(QObject):
                 # print("Processing current frame as image.")
                 self.start_frame_worker(self.current_frame_number, frame, is_single_frame=True)
             else:
-                print("Error: Unable to read image file.")
+                logger.error("Unable to read image file: %s", self.media_path)
+                self.main_window.display_messagebox_signal.emit(
+                    i18n.tr("Cannot Open Media"),
+                    f"{i18n.tr('Could not open the selected file:')}\n{self.media_path}",
+                    self.main_window,
+                )
 
         # Handle webcam capture
         elif self.file_type == 'webcam':
@@ -327,7 +337,7 @@ class VideoProcessor(QObject):
                 self.frame_queue.put(self.current_frame_number)
                 self.start_frame_worker(self.current_frame_number, frame, is_single_frame=True)
             else:
-                print("Unable to read Webcam frame!")
+                logger.error("Unable to read webcam frame")
         self.join_and_clear_threads()
 
     def process_next_webcam_frame(self):
@@ -397,7 +407,9 @@ class VideoProcessor(QObject):
                             "-map", "0:v:0", "-map", "1:a:0?",
                             "-shortest",
                             final_file_path]
-                    subprocess.run(args, check=False) #Add Audio
+                    merge = subprocess.run(args, check=False)  # Add Audio
+                    if merge.returncode != 0:
+                        logger.warning("ffmpeg audio merge failed (exit code %s)", merge.returncode)
                     if Path(self.temp_file).is_file():
                         os.remove(self.temp_file)
 
@@ -456,7 +468,17 @@ class VideoProcessor(QObject):
             self.temp_file                # Output file
         ]
 
-        self.recording_sp = subprocess.Popen(args, stdin=subprocess.PIPE)
+        try:
+            self.recording_sp = subprocess.Popen(args, stdin=subprocess.PIPE)
+        except Exception as exc:  # pylint: disable=broad-exception-caught
+            logger.exception("Failed to start ffmpeg for recording")
+            self.recording_sp = None
+            self.recording = False
+            self.main_window.display_messagebox_signal.emit(
+                i18n.tr("Recording Error"),
+                f"{i18n.tr('Could not start ffmpeg for recording. Make sure ffmpeg is available.')}\n\n{exc}",
+                self.main_window,
+            )
 
     def enable_virtualcam(self, backend=False):
         #Check if capture contains any cv2 stream or is it an empty list

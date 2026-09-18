@@ -17,8 +17,12 @@ from app.ui.widgets.actions import graphics_view_actions
 from app.ui.widgets.actions import card_actions
 from app.ui.widgets.actions import list_view_actions
 from app.ui.widgets.actions import save_load_actions
+import logging
+
 import app.helpers.miscellaneous as misc_helpers
 from app.helpers import i18n
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from app.ui.main_ui import MainWindow
@@ -184,7 +188,12 @@ class TargetMediaCardButton(CardButton):
         if self.file_type == 'video':
             media_capture = cv2.VideoCapture(self.media_path)
             if not media_capture.isOpened():
-                print(f"Error opening video {self.media_path}")
+                logger.error("Error opening video %s", self.media_path)
+                main_window.display_messagebox_signal.emit(
+                    i18n.tr("Cannot Open Media"),
+                    f"{i18n.tr('Could not open the selected file:')}\n{self.media_path}",
+                    main_window,
+                )
                 return  # If the video cannot be opened, exit the function
 
             media_capture.set(cv2.CAP_PROP_POS_FRAMES, 0)
@@ -197,6 +206,14 @@ class TargetMediaCardButton(CardButton):
 
         elif self.file_type == 'image':
             frame = misc_helpers.read_image_file(self.media_path)
+            if frame is None:
+                logger.error("Error opening image %s", self.media_path)
+                main_window.display_messagebox_signal.emit(
+                    i18n.tr("Cannot Open Media"),
+                    f"{i18n.tr('Could not open the selected file:')}\n{self.media_path}",
+                    main_window,
+                )
+                return
             max_frames_number = 0  # For an image, there is only one "frame"
             main_window.video_processor.max_frame_number = max_frames_number
 
@@ -204,6 +221,14 @@ class TargetMediaCardButton(CardButton):
             res_width, res_height = self.main_window.control['WebcamMaxResSelection'].split('x')
 
             media_capture = cv2.VideoCapture(self.webcam_index, self.webcam_backend)
+            if not media_capture.isOpened():
+                logger.error("Error opening webcam %s", self.webcam_index)
+                main_window.display_messagebox_signal.emit(
+                    i18n.tr("Cannot Open Webcam"),
+                    i18n.tr("Could not open the webcam. Check that it is connected and not in use."),
+                    main_window,
+                )
+                return
             media_capture.set(cv2.CAP_PROP_FRAME_WIDTH, int(res_width))
             media_capture.set(cv2.CAP_PROP_FRAME_HEIGHT, int(res_height))
             max_frames_number = 999999

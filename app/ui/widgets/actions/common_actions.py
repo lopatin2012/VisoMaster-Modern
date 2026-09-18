@@ -1,3 +1,4 @@
+import logging
 import os
 import threading
 from typing import TYPE_CHECKING, Callable
@@ -13,6 +14,9 @@ from app.ui.widgets import widget_components
 from app.ui.widgets.settings_layout_data import SETTINGS_LAYOUT_DATA
 import app.helpers.miscellaneous as misc_helpers
 from app.helpers import perf, i18n
+
+logger = logging.getLogger(__name__)
+
 if TYPE_CHECKING:
     from app.ui.main_ui import MainWindow
     
@@ -311,6 +315,7 @@ def extract_frame_as_pixmap(media_file_path, file_type, webcam_index=False, webc
     elif file_type == 'video':    
         cap = cv2.VideoCapture(media_file_path)
         if not cap.isOpened():
+            logger.warning("Could not open video for thumbnail: %s", media_file_path)
             return None
         
         # Get total frames and find the middle frame no
@@ -324,9 +329,13 @@ def extract_frame_as_pixmap(media_file_path, file_type, webcam_index=False, webc
     elif file_type == 'webcam':
         camera = cv2.VideoCapture(webcam_index, webcam_backend)
         if not camera.isOpened():
+            logger.warning("Could not open webcam for thumbnail: %s", webcam_index)
+            camera.release()
             return
         ret, frame = misc_helpers.read_frame(camera)
+        camera.release()
         if not ret:
+            logger.warning("Could not read a frame from webcam: %s", webcam_index)
             return
 
     if isinstance(frame, np.ndarray):

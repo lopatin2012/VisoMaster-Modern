@@ -1,4 +1,5 @@
 import json
+import logging
 from pathlib import Path
 import uuid
 import copy
@@ -19,6 +20,8 @@ import app.helpers.miscellaneous as misc_helpers
 
 if TYPE_CHECKING:
     from app.ui.main_ui import MainWindow
+
+logger = logging.getLogger(__name__)
 
 def open_embeddings_from_file(main_window: 'MainWindow'):
     
@@ -123,6 +126,19 @@ def load_parameters_and_settings(main_window: 'MainWindow', face_id, load_settin
             common_widget_actions.refresh_frame(main_window)
 
 def load_saved_workspace(main_window: 'MainWindow', data_filename: str|bool = False):
+    try:
+        _load_saved_workspace(main_window, data_filename)
+    except Exception as exc:  # pylint: disable=broad-exception-caught
+        logger.exception("Failed to load workspace")
+        common_widget_actions.create_and_show_messagebox(
+            main_window,
+            "Load Failed",
+            f"Could not load the workspace file:\n{exc}",
+            main_window,
+        )
+
+
+def _load_saved_workspace(main_window: 'MainWindow', data_filename: str|bool = False):
     if not data_filename:
         data_filename, _ = QtWidgets.QFileDialog.getOpenFileName(main_window, filter='JSON (*.json)')
     # Check if File exists (In cases when filename is passed as function argument instead of from the file picker)

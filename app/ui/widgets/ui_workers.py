@@ -1,7 +1,7 @@
 import uuid
+import logging
 from functools import partial
 from typing import TYPE_CHECKING, Dict
-import traceback
 import os
 
 import cv2
@@ -18,6 +18,9 @@ from app.ui.widgets.settings_layout_data import SETTINGS_LAYOUT_DATA, CAMERA_BAC
 
 if TYPE_CHECKING:
     from app.ui.main_ui import MainWindow
+
+logger = logging.getLogger(__name__)
+
 
 class TargetMediaLoaderWorker(qtc.QThread):
     # Define signals to emit when loading is done or if there are updates
@@ -38,13 +41,22 @@ class TargetMediaLoaderWorker(qtc.QThread):
         misc_helpers.ensure_thumbnail_dir()
 
     def run(self):
-        if self.folder_name:
-            self.load_videos_and_images_from_folder(self.folder_name)
-        if self.files_list:
-            self.load_videos_and_images_from_files_list(self.files_list)
-        if self.webcam_mode:
-            self.load_webcams()
-        self.finished.emit()
+        try:
+            if self.folder_name:
+                self.load_videos_and_images_from_folder(self.folder_name)
+            if self.files_list:
+                self.load_videos_and_images_from_files_list(self.files_list)
+            if self.webcam_mode:
+                self.load_webcams()
+        except Exception:  # pylint: disable=broad-exception-caught
+            logger.exception("Target media loader failed")
+            self.main_window.display_messagebox_signal.emit(
+                "Load Failed",
+                "Failed to load the selected media. See visomaster.log for details.",
+                self.main_window,
+            )
+        finally:
+            self.finished.emit()
 
     def load_videos_and_images_from_folder(self, folder_name):
         # Initially hide the placeholder text
@@ -101,8 +113,8 @@ class TargetMediaLoaderWorker(qtc.QThread):
                 if pixmap:
                     # Emit the signal to update GUI
                     self.webcam_thumbnail_ready.emit(f'Webcam {i}', pixmap, 'webcam',media_id, i, camera_backend)
-            except Exception: # pylint: disable=broad-exception-caught
-                traceback.print_exc()
+            except Exception:  # pylint: disable=broad-exception-caught
+                logger.exception("Failed to load webcam %s", i)
         self.main_window.placeholder_update_signal.emit(self.main_window.targetVideosList, False)
 
     def stop(self):
@@ -145,9 +157,19 @@ class InputFacesLoaderWorker(qtc.QThread):
             self.main_window.buttonMediaPlay.click()
 
     def run(self):
-        if self.folder_name or self.files_list:
-            self.main_window.placeholder_update_signal.emit(self.main_window.inputFacesList, True)
+        if not (self.folder_name or self.files_list):
+            return
+        self.main_window.placeholder_update_signal.emit(self.main_window.inputFacesList, True)
+        try:
             self.load_faces(self.folder_name, self.files_list)
+        except Exception:  # pylint: disable=broad-exception-caught
+            logger.exception("Input faces loader failed")
+            self.main_window.display_messagebox_signal.emit(
+                "Load Failed",
+                "Failed to load the selected face images. See visomaster.log for details.",
+                self.main_window,
+            )
+        finally:
             self.main_window.placeholder_update_signal.emit(self.main_window.inputFacesList, False)
 
     def load_faces(self, folder_name=False, files_list=None):

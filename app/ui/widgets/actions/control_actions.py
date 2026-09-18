@@ -8,7 +8,7 @@ if TYPE_CHECKING:
     from app.ui.main_ui import MainWindow
 from app.ui.widgets.actions import common_actions as common_widget_actions
 from app.ui.styles.fluent_theme import apply_fluent_theme
-from app.helpers import i18n
+from app.helpers import i18n, asset_check
 from app.version import APP_NAME, APP_VERSION
 
 #'''
@@ -65,6 +65,26 @@ def change_theme(main_window: 'MainWindow', new_theme):
 def set_theme_from_menu(main_window: 'MainWindow', new_theme):
     main_window.control['ThemeSelection'] = new_theme
     change_theme(main_window, new_theme)
+
+
+def check_models(main_window: 'MainWindow'):
+    from qfluentwidgets import MessageBox
+
+    missing = asset_check.find_missing_models()
+    if missing:
+        title = i18n.tr("Models Missing")
+        shown = "\n".join(missing[:12])
+        if len(missing) > 12:
+            shown += f"\n… (+{len(missing) - 12})"
+        body = f"{i18n.tr('Some model files are missing. Run download_models.py to download them:')}\n\n{shown}"
+    else:
+        title = i18n.tr("Check Models")
+        body = i18n.tr("All model files are present.")
+
+    box = MessageBox(title, body, main_window)
+    box.yesButton.setText(i18n.tr("OK"))
+    box.cancelButton.hide()
+    box.exec()
 
 
 def show_about(main_window: 'MainWindow'):

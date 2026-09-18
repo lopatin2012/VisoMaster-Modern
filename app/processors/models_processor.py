@@ -250,7 +250,7 @@ class ModelsProcessor(QtCore.QObject):
                             ]
                 self.device = 'cuda'
                 if version.parse(trt.__version__) < version.parse("10.2.0") and provider_name == "TensorRT-Engine":
-                    print("TensorRT-Engine provider cannot be used when TensorRT version is lower than 10.2.0.")
+                    logger.warning("TensorRT-Engine provider cannot be used when TensorRT version is lower than 10.2.0.")
                     provider_name = "TensorRT"
 
             case "CPU":

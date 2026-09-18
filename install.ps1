@@ -97,7 +97,11 @@ if ($SkipModels) {
 } else {
     Write-Step "Downloading models into model_assets/ (large)"
     & $VenvPy (Join-Path $Root "download_models.py")
-    Write-Ok "models downloaded"
+    if ($LASTEXITCODE -ne 0) {
+        Write-Warn2 "some models failed to download; re-run install.ps1 (or download_models.py) to resume."
+    } else {
+        Write-Ok "models downloaded"
+    }
 }
 
 # --- 5. ffmpeg -----------------------------------------------------------------

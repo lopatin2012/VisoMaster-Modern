@@ -25,3 +25,12 @@ def find_missing_support_files() -> list:
 def has_any_model() -> bool:
     """True if at least one ONNX model is present in model_assets/."""
     return MODELS_DIR.is_dir() and any(MODELS_DIR.glob("*.onnx"))
+
+
+def find_missing_models() -> list:
+    """Return local paths from ``models_list`` that are not present on disk."""
+    try:
+        from app.processors.models_data import models_list
+    except Exception:  # pylint: disable=broad-exception-caught
+        return []
+    return [entry["local_path"] for entry in models_list if not Path(entry["local_path"]).is_file()]

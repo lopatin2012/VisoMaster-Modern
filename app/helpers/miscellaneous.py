@@ -9,8 +9,10 @@ from functools import wraps
 from datetime import datetime
 from pathlib import Path
 from torchvision.transforms import v2
+import logging
 import threading
 lock = threading.Lock()
+logger = logging.getLogger(__name__)
 
 image_extensions = ('.jpg', '.jpeg', '.jpe', '.png', '.webp', '.tif', '.tiff', '.jp2', '.exr', '.hdr', '.ras', '.pnm', '.ppm', '.pgm', '.pbm', '.pfm')
 video_extensions = ('.mp4', '.avi', '.mkv', '.mov', '.wmv', '.flv', '.webm', '.m4v', '.3gp', '.gif')
@@ -142,6 +144,8 @@ def save_thumbnail(frame, thumbnail_path):
 
 def get_dfm_models_data():
     DFM_MODELS_DATA.clear()
+    if not os.path.isdir(DFM_MODELS_PATH):
+        os.makedirs(DFM_MODELS_PATH, exist_ok=True)
     for dfm_file in os.listdir(DFM_MODELS_PATH):
         if dfm_file.endswith(('.dfm','.onnx')):
             DFM_MODELS_DATA[dfm_file] = f'{DFM_MODELS_PATH}/{dfm_file}'
@@ -195,12 +199,12 @@ def read_image_file(image_path):
     try:
         img_array = np.fromfile(image_path, np.uint8)
         img = cv2.imdecode(img_array, cv2.IMREAD_COLOR)  # Always load as BGR
-    except Exception as e:
-        print(f"Failed to load {image_path}: {e}")
+    except Exception as e:  # pylint: disable=broad-exception-caught
+        logger.warning("Failed to load %s: %s", image_path, e)
         return None
 
     if img is None:
-        print("Failed to decode:", image_path)
+        logger.warning("Failed to decode image: %s", image_path)
         return None
 
     return img  # Return BGR format

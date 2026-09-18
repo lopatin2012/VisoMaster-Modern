@@ -368,6 +368,11 @@ def set_up_settings_menu(main_window: 'MainWindow'):
     language_menu.aboutToShow.connect(_sync_language)
     _sync_language()
 
+    # Check Models
+    check_models_action = settings_menu.addAction(i18n.tr("Check Models"))
+    check_models_action.setProperty("_i18n_src", "Check Models")
+    check_models_action.triggered.connect(partial(control_actions.check_models, main_window))
+
     # About
     settings_menu.addSeparator()
     about_action = settings_menu.addAction(i18n.tr("About"))
