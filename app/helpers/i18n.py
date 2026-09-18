@@ -110,7 +110,17 @@ def _retranslate_one(widget) -> None:
     if tip:
         widget.setToolTip(tr(tip))
 
-    if isinstance(widget, (QtWidgets.QMainWindow, QtWidgets.QDialog)):
+    if isinstance(widget, QtWidgets.QLineEdit):
+        placeholder = widget.property("_i18n_ph")
+        if placeholder is None:
+            current_placeholder = widget.placeholderText()
+            if current_placeholder:
+                widget.setProperty("_i18n_ph", current_placeholder)
+                placeholder = current_placeholder
+        if placeholder:
+            widget.setPlaceholderText(tr(placeholder))
+
+    if isinstance(widget, (QtWidgets.QMainWindow, QtWidgets.QDialog, QtWidgets.QDockWidget)):
         title = widget.property("_i18n_title") or widget.windowTitle()
         if title:
             widget.setProperty("_i18n_title", title)
@@ -155,9 +165,9 @@ TRANSLATIONS = {
         "Animation Region": "Область анимации",
         "Blend": "Смешивание",
         "Crop Scale": "Масштаб кропа",
-        "Enable Face Expression Restorer": "Включить восстановление выражения лица",
-        "Enable Face Restorer": "Включить восстановление лица",
-        "Enable Face Restorer 2": "Включить восстановление лица 2",
+        "Enable Face Expression Restorer": "Восстановление выражения",
+        "Enable Face Restorer": "Восстановление лица",
+        "Enable Face Restorer 2": "Восстановление лица 2",
         "Expression Friendly Factor": "Коэффициент выразительности",
         "Fidelity Weight": "Вес точности",
         "Normalize Lips": "Нормализация губ",
@@ -168,8 +178,8 @@ TRANSLATIONS = {
         "Retargeting Lips": "Перенацеливание губ",
         "Retargeting Lips Multiplier": "Множитель перенацеливания губ",
         "VY Ratio": "Коэффициент VY",
-        "View Face Compare": "Показывать сравнение лиц",
-        "View Face Mask": "Показывать маску лица",
+        "View Face Compare": "Сравнение лиц",
+        "View Face Mask": "Маска лица",
 
         # Swapper labels
         "5 - Keypoints Adjustments": "Настройки 5 ключевых точек",
@@ -230,9 +240,9 @@ TRANSLATIONS = {
         "Nose": "Нос",
         "Nose:   X": "Нос:   X",
         "Nose:   Y": "Нос:   Y",
-        "Occluder/DFL XSeg Blur": "Размытие Occluder/DFL XSeg",
+        "Occluder/DFL XSeg Blur": "Размытие Occluder XSeg",
         "Occlusion Mask": "Маска окклюзии",
-        "Overall Mask Blend Amount": "Общая степень смешивания маски",
+        "Overall Mask Blend Amount": "Общее смешивание маски",
         "RCT Color Transfer": "Перенос цвета RCT",
         "Red": "Красный",
         "Restore Eyes": "Восстановить глаза",
@@ -270,25 +280,25 @@ TRANSLATIONS = {
         "Detect From Points": "Детекция по точкам",
         "Detect Score": "Порог детекции",
         "Enable Frame Enhancer": "Включить улучшение кадров",
-        "Enable Landmark Detection": "Включить детекцию ключевых точек",
+        "Enable Landmark Detection": "Детекция ключевых точек",
         "Face Detect Model": "Модель детекции лиц",
         "Frame Enhancer Type": "Тип улучшения кадров",
-        "Input Faces Include Subfolders": "Включая подпапки (исходные лица)",
-        "Landmark Detect Model": "Модель детекции ключевых точек",
+        "Input Faces Include Subfolders": "Подпапки (исходные лица)",
+        "Landmark Detect Model": "Модель детекции точек",
         "Landmark Detect Score": "Порог детекции точек",
         "Manual Rotation": "Ручной поворот",
-        "Max No of Faces to Detect": "Макс. число лиц для детекции",
+        "Max No of Faces to Detect": "Макс. лиц для детекции",
         "Maximum DFM Models to use": "Макс. число DFM-моделей",
         "Number of Threads": "Число потоков",
         "Providers Priority": "Приоритет провайдеров",
         "Recognition Model": "Модель распознавания",
         "Rotation Angle": "Угол поворота",
-        "Send Frames to Virtual Camera": "Отправлять кадры в виртуальную камеру",
+        "Send Frames to Virtual Camera": "Отправлять в вирт. камеру",
         "Set Custom Video Playback FPS": "Свой FPS воспроизведения",
         "Show Bounding Boxes": "Показывать рамки лиц",
         "Show Landmarks": "Показывать ключевые точки",
         "Swapping Similarity Type": "Тип схожести при свапе",
-        "Target Media Include Subfolders": "Включая подпапки (целевые медиа)",
+        "Target Media Include Subfolders": "Подпапки (целевые медиа)",
         "Theme": "Тема",
         "Video Playback FPS": "FPS воспроизведения",
         "Virtual Camera Backend": "Бэкенд виртуальной камеры",
@@ -300,7 +310,7 @@ TRANSLATIONS = {
 
         # Face editor labels
         "Blur Amount": "Степень размытия",
-        "Enable Face Pose/Expression Editor": "Включить редактор позы/выражения лица",
+        "Enable Face Pose/Expression Editor": "Редактор позы/выражения",
         "Eye Wink": "Подмигивание",
         "EyeBrows Direction": "Направление бровей",
         "EyeBrows Makeup": "Макияж бровей",
@@ -336,7 +346,7 @@ TRANSLATIONS = {
         "Exit": "Выход",
         "Face Editor": "Редактор лица",
         "Face Swap": "Свап лиц",
-        "Faces Panel": "Панель лиц",
+        "Faces Panel": "Лица",
         "File": "Файл",
         "Find Faces": "Найти лица",
         "Frame Number": "Номер кадра",
@@ -350,12 +360,12 @@ TRANSLATIONS = {
         "Load Source Images Folder": "Загрузить папку исходных лиц",
         "Load Target Image/Video Files": "Загрузить целевые изображения/видео",
         "Load Target Images/Videos Folder": "Загрузить папку целевых медиа",
-        "Media Panel": "Панель медиа",
+        "Media Panel": "Медиа",
         "Move to Next Marker": "К следующему маркеру",
         "Move to Previous Marker": "К предыдущему маркеру",
         "Open Embedding File": "Открыть файл эмбеддингов",
         "Output Directory": "Папка вывода",
-        "Parameters Panel": "Панель параметров",
+        "Parameters Panel": "Параметры",
         "Remove Marker": "Удалить маркер",
         "Save Current Workspace": "Сохранить сессию",
         "Save Embedding": "Сохранить эмбеддинг",
@@ -365,7 +375,7 @@ TRANSLATIONS = {
         "Save Image": "Сохранить изображение",
         "Search Embeddings": "Поиск эмбеддингов",
         "Search Faces": "Поиск лиц",
-        "Search Videos/Images": "Поиск видео/изображений",
+        "Search Videos/Images": "Поиск видео/фото",
         "Select Face Images Path": "Выберите путь к изображениям лиц",
         "Select Videos/Images Path": "Выберите путь к видео/изображениям",
         "Settings": "Настройки",
@@ -373,9 +383,9 @@ TRANSLATIONS = {
         "Target Videos and Input Faces": "Целевые видео и исходные лица",
         "Target Videos/Images": "Целевые видео/изображения",
         "Test": "Тест",
-        "VIew Face Compare": "Показывать сравнение лиц",
+        "VIew Face Compare": "Сравнение лиц",
         "View": "Вид",
-        "View Face Mask": "Показывать маску лица",
+        "View Face Mask": "Маска лица",
         "View Fullscreen (F11)": "Полный экран (F11)",
         "VisoMaster v0.1.5": "VisoMaster-Modern",
 
@@ -429,8 +439,8 @@ TRANSLATIONS = {
         "Normalize the lips during the facial restoration process.": "Нормализует губы при восстановлении лица.",
         "Select the alignment method for restoring the face to its original or blended position.": "Выберите метод выравнивания для возврата лица в исходное или смешанное положение.",
         "Select the model type for face restoration.": "Выберите тип модели восстановления лица.",
-        "Show Face Compare": "Показывать сравнение лиц",
-        "Show Face Mask": "Показывать маску лица",
+        "Show Face Compare": "Сравнение лиц",
+        "Show Face Mask": "Маска лица",
         "The facial region involved in the restoration process.": "Область лица, участвующая в восстановлении.",
         "Threshold value for Normalize Lips.": "Порог нормализации губ.",
 
