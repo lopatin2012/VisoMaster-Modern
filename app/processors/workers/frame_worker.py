@@ -13,7 +13,6 @@ from torchvision import transforms
 import numpy as np
 
 from app.processors.utils import faceutil
-import app.ui.widgets.actions.common_actions as common_widget_actions
 from app.ui.widgets.actions import video_control_actions
 from app.helpers.miscellaneous import t512,t384,t256,t128, ParametersDict
 from app.helpers import perf, i18n
@@ -90,23 +89,24 @@ class FrameWorker(threading.Thread):
             self.frame = np.ascontiguousarray(self.frame)
             _enhancer_trace('frame', "FrameWorker: processed frame=%s shape=%s dtype=%s",
                             self.frame_number, getattr(self.frame, "shape", None), getattr(self.frame, "dtype", None))
+            # Display the frame if processing is still active. Do not build the
+            # QPixmap here: FrameWorker runs in a thread for video/webcam and
+            # QPixmap is GUI-thread only. The display slots build it instead.
+            _enhancer_trace('frame', "FrameWorker: frame ready frame=%s shape=%s dtype=%s",
+                            self.frame_number, getattr(self.frame, "shape", None), getattr(self.frame, "dtype", None))
 
-            # Display the frame if processing is still active
-
-            pixmap = common_widget_actions.get_pixmap_from_frame(self.main_window, self.frame)
-            _enhancer_trace('frame', "FrameWorker: pixmap ready frame=%s", self.frame_number)
             # Output processed Webcam frame
             if self.video_processor.file_type=='webcam' and not self.is_single_frame:
-                self.video_processor.webcam_frame_processed_signal.emit(pixmap, self.frame)
+                self.video_processor.webcam_frame_processed_signal.emit(self.frame)
 
             #Output Video frame (while playing)
             elif not self.is_single_frame:
-                self.video_processor.frame_processed_signal.emit(self.frame_number, pixmap, self.frame)
+                self.video_processor.frame_processed_signal.emit(self.frame_number, self.frame)
             # Output Image/Video frame (Single frame)
             else:
                 # print('Emitted single_frame_processed_signal')
                 _enhancer_trace('frame', "FrameWorker: emitting single_frame frame=%s", self.frame_number)
-                self.video_processor.single_frame_processed_signal.emit(self.frame_number, pixmap, self.frame)
+                self.video_processor.single_frame_processed_signal.emit(self.frame_number, self.frame)
                 _enhancer_trace('frame', "FrameWorker: emitted single_frame frame=%s", self.frame_number)
 
 

@@ -52,9 +52,11 @@ def _detect_h264_encoder() -> str:
     return _H264_ENCODER
 
 class VideoProcessor(QObject):
-    frame_processed_signal = Signal(int, QPixmap, numpy.ndarray)
-    webcam_frame_processed_signal = Signal(QPixmap, numpy.ndarray)
-    single_frame_processed_signal = Signal(int, QPixmap, numpy.ndarray)
+    # Signals carry the raw BGR frame; the GUI-thread slots build the QPixmap
+    # (QPixmap is not usable from a worker thread).
+    frame_processed_signal = Signal(int, numpy.ndarray)
+    webcam_frame_processed_signal = Signal(numpy.ndarray)
+    single_frame_processed_signal = Signal(int, numpy.ndarray)
     def __init__(self, main_window: 'MainWindow', num_threads=2):
         super().__init__()
         self.main_window = main_window
@@ -107,19 +109,22 @@ class VideoProcessor(QObject):
 
         self.single_frame_processed_signal.connect(self.display_current_frame)
 
-    Slot(int, QPixmap, numpy.ndarray)
-    def store_frame_to_display(self, frame_number, pixmap, frame):
-        # print("Called store_frame_to_display()")
+    Slot(int, numpy.ndarray)
+    def store_frame_to_display(self, frame_number, frame):
+        # Build the QPixmap on the GUI thread (QPixmap is not thread-safe and
+        # must not be created in FrameWorker).
+        pixmap = common_widget_actions.get_pixmap_from_frame(self.main_window, frame)
         self.frames_to_display[frame_number] = (pixmap, frame)
 
     # Use a queue to store the webcam frames, since the order of frames is not that important (Unless there are too many threads)
-    Slot(QPixmap, numpy.ndarray)
-    def store_webcam_frame_to_display(self, pixmap, frame):
-        # print("Called store_webcam_frame_to_display()")
+    Slot(numpy.ndarray)
+    def store_webcam_frame_to_display(self, frame):
+        pixmap = common_widget_actions.get_pixmap_from_frame(self.main_window, frame)
         self.webcam_frames_to_display.put((pixmap, frame))
 
-    Slot(int, QPixmap, numpy.ndarray)
-    def display_current_frame(self, frame_number, pixmap, frame):
+    Slot(int, numpy.ndarray)
+    def display_current_frame(self, frame_number, frame):
+        pixmap = common_widget_actions.get_pixmap_from_frame(self.main_window, frame)
         logger.debug("display_current_frame start: frame=%s pixmap=%sx%s",
                      frame_number, pixmap.width(), pixmap.height())
         if self.main_window.loading_new_media:
