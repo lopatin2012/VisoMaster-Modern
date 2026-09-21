@@ -61,5 +61,13 @@ VisoMaster-Modern: fork of VisoMaster, a PySide6 desktop app for AI face swappin
 - Values are stored in `main_window.parameters[face_id]` (per-face) or `main_window.control` (settings tab). A new option needs a layout entry plus consumption in the processor/worker code.
 - `ParametersDict` (in `app/helpers/miscellaneous.py`) falls back to `default_parameters` for missing keys, so old saved workspaces load cleanly when new settings are added; defaults come from the layout entry.
 
+## Releases
+- This project ships **GitHub releases** on `lopatin2012/VisoMaster-Modern`: tags `vX.Y.Z`, title `VisoMaster-Modern vX.Y.Z`. Inspect an existing one with `gh release view v1.0.4`.
+- Version source of truth is `app/version.py` (`APP_VERSION`); it is shown in the window title/About and asserted by the smoke test.
+- Existing convention is a **patch bump** even for feature sets: edit `APP_VERSION`, commit `chore: bump version to X.Y.Z`, push `main`, then create the release.
+- Release assets: `install.bat`, `install.ps1`, and `VisoMaster-Modern-installer.zip` (contains `install.bat`, `install.ps1`, `INSTALL.txt`). Create with `gh release create vX.Y.Z --title "VisoMaster-Modern vX.Y.Z" --notes-file <notes> install.bat install.ps1 <zip>`.
+- Notes follow the previous releases: a `## Changes` list plus `## Install (Windows)` / `## Установка (RU)` / `## 安装 (ZH)` snippets.
+- Model/ffmpeg binaries are **not** release assets; they live in the separate `visomaster-assets` repo (see README).
+
 ## Ignored runtime artifacts
 `tensorrt-engines/`, `.thumbnails/`, `last_workspace.json`, `parameter_presets.json` (named face-parameter presets; menu `Settings -> Presets`), `temp_output.mp4`, `output/`, `source_*/`, `dependencies/{Python,CUDA,TensorRT,git-portable}`. `.gitignore` also ignores broad patterns (`*.json`, `*.mp4`, `*.jpg`, `*.onnx`, `*.engine`, `*.dfm`, `*.exe`), so new data/config files are untracked unless forced.
