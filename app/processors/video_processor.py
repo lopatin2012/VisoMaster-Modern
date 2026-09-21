@@ -72,6 +72,8 @@ class VideoProcessor(QObject):
         self.current_frame: numpy.ndarray = []
         self.recording = False
         self.error_reported = False
+        self.oom_reported = False
+        self.processing_single_frame = False
 
         self.virtcam: pyvirtualcam.Camera|None = None
 
@@ -118,6 +120,8 @@ class VideoProcessor(QObject):
 
     Slot(int, QPixmap, numpy.ndarray)
     def display_current_frame(self, frame_number, pixmap, frame):
+        logger.debug("display_current_frame start: frame=%s pixmap=%sx%s",
+                     frame_number, pixmap.width(), pixmap.height())
         if self.main_window.loading_new_media:
             graphics_view_actions.update_graphics_view(self.main_window, pixmap, frame_number, reset_fit=True)
             self.main_window.loading_new_media = False
@@ -125,6 +129,7 @@ class VideoProcessor(QObject):
         else:
             graphics_view_actions.update_graphics_view(self.main_window, pixmap, frame_number,)
         self.current_frame = frame
+        logger.debug("display_current_frame done: frame=%s", frame_number)
         # Hot path (per single frame / seek): do NOT call torch.cuda.empty_cache() or
         # poll nvidia-smi here — both are very expensive. The 5s gpu_memory_update_timer
         # keeps the VRAM bar fresh during playback.
@@ -166,11 +171,19 @@ class VideoProcessor(QObject):
 
     def send_frame_to_virtualcam(self, frame: numpy.ndarray):
         if self.main_window.control['SendVirtCamFramesEnableToggle'] and self.virtcam:
-            # Check if the dimensions of the frame matches that of the Virtcam object
-            # If it doesn't match, reinstantiate the Virtcam object with new dimensions
-            height, width, _ = frame.shape
-            if self.virtcam.height!=height or self.virtcam.width!=width:
-                self.enable_virtualcam()
+            # Never recreate the native camera here: closing/reopening OBS/Unity
+            # capture while it is running (which the frame enhancer triggers by
+            # changing the frame size) can crash the native backend. Resize the
+            # frame to the camera's fixed dimensions instead.
+            height, width = frame.shape[0], frame.shape[1]
+            if self.virtcam.height != height or self.virtcam.width != width:
+                try:
+                    frame = cv2.resize(frame, (self.virtcam.width, self.virtcam.height), interpolation=cv2.INTER_LINEAR)
+                    logger.debug("Virtual camera: resized frame %sx%s -> %sx%s",
+                                 width, height, self.virtcam.width, self.virtcam.height)
+                except Exception as exc:  # pylint: disable=broad-exception-caught
+                    logger.warning("Virtual camera resize failed: %s", exc)
+                    return
             try:
                 self.virtcam.send(frame)
                 self.virtcam.sleep_until_next_frame()
@@ -191,6 +204,7 @@ class VideoProcessor(QObject):
             return
 
         self.error_reported = False
+        self.oom_reported = False
 
         # Re-initialize the timers
         self.frame_display_timer = QTimer()
@@ -207,6 +221,7 @@ class VideoProcessor(QObject):
 
                 self.start_time = time.perf_counter()
                 self.processing = True
+                self.main_window.reset_face_smoothing()
                 self.frames_to_display.clear()
                 self.threads.clear()
 
@@ -245,6 +260,7 @@ class VideoProcessor(QObject):
         elif self.file_type == 'webcam':
             print("Calling process_video() on Webcam stream")
             self.processing = True
+            self.main_window.reset_face_smoothing()
             self.frames_to_display.clear()
             self.threads.clear()
             fps = self.media_capture.get(cv2.CAP_PROP_FPS)
@@ -288,7 +304,14 @@ class VideoProcessor(QObject):
         worker = FrameWorker(frame, self.main_window, frame_number, self.frame_queue, is_single_frame)
         self.threads[frame_number] = worker
         if is_single_frame:
-            worker.run()
+            # Single frames are processed synchronously on the GUI thread. Guard
+            # against re-entrant event processing (e.g. the model-loading dialog's
+            # processEvents()) which can corrupt Qt state and crash later.
+            self.processing_single_frame = True
+            try:
+                worker.run()
+            finally:
+                self.processing_single_frame = False
         else:
             worker.start()
 

@@ -25,6 +25,33 @@ torchvision.disable_beta_transforms_warning()
 
 logger = logging.getLogger(__name__)
 
+# Per-frame enhancer tracing is verbose; keep only the first few frames of each
+# type so a short clip still captures startup/crash context without flooding the log.
+_ENHANCER_TRACE_LIMIT = 8
+_FRAME_TRACE_LIMIT = 200
+_enhancer_trace_counts: dict = {}
+
+
+def _enhancer_trace(key, message, *args):
+    limit = _FRAME_TRACE_LIMIT if key == 'frame' else _ENHANCER_TRACE_LIMIT
+    count = _enhancer_trace_counts.get(key, 0)
+    if count < limit:
+        _enhancer_trace_counts[key] = count + 1
+        logger.debug(message, *args)
+
+
+def _is_cuda_oom(exc: BaseException) -> bool:
+    """Detect a CUDA/GPU out-of-memory error from torch or onnxruntime."""
+    try:
+        if isinstance(exc, torch.cuda.OutOfMemoryError):
+            return True
+    except AttributeError:  # pragma: no cover - depends on torch build
+        pass
+    text = str(exc).lower()
+    return "out of memory" in text and any(
+        token in text for token in ("cuda", "gpu", "cudnn", "memory allocation")
+    )
+
 
 class FrameWorker(threading.Thread):
     def __init__(self, frame, main_window: 'MainWindow', frame_number, frame_queue, is_single_frame=False):
@@ -54,17 +81,20 @@ class FrameWorker(threading.Thread):
 
             # Process the frame with model inference
             # print(f"Processing frame {self.frame_number}")
+            _enhancer_trace('frame', "FrameWorker: start frame=%s single=%s", self.frame_number, self.is_single_frame)
             if self.main_window.swapfacesButton.isChecked() or self.main_window.editFacesButton.isChecked() or self.main_window.control['FrameEnhancerEnableToggle']:
                 self.frame = self.process_frame()
             else:
                 # Img must be in BGR format
                 self.frame = self.frame[..., ::-1]  # Swap the channels from RGB to BGR
             self.frame = np.ascontiguousarray(self.frame)
+            _enhancer_trace('frame', "FrameWorker: processed frame=%s shape=%s dtype=%s",
+                            self.frame_number, getattr(self.frame, "shape", None), getattr(self.frame, "dtype", None))
 
             # Display the frame if processing is still active
 
             pixmap = common_widget_actions.get_pixmap_from_frame(self.main_window, self.frame)
-
+            _enhancer_trace('frame', "FrameWorker: pixmap ready frame=%s", self.frame_number)
             # Output processed Webcam frame
             if self.video_processor.file_type=='webcam' and not self.is_single_frame:
                 self.video_processor.webcam_frame_processed_signal.emit(pixmap, self.frame)
@@ -75,7 +105,9 @@ class FrameWorker(threading.Thread):
             # Output Image/Video frame (Single frame)
             else:
                 # print('Emitted single_frame_processed_signal')
+                _enhancer_trace('frame', "FrameWorker: emitting single_frame frame=%s", self.frame_number)
                 self.video_processor.single_frame_processed_signal.emit(self.frame_number, pixmap, self.frame)
+                _enhancer_trace('frame', "FrameWorker: emitted single_frame frame=%s", self.frame_number)
 
 
             # Mark the frame as done in the queue
@@ -89,6 +121,14 @@ class FrameWorker(threading.Thread):
                 self.video_processor.stop_processing()
 
         except Exception as exc:  # pylint: disable=broad-exception-caught
+            if _is_cuda_oom(exc):
+                logger.exception("CUDA out of memory while processing frame %s", self.frame_number)
+                # A single dialog for the whole run; the main thread stops
+                # processing and unloads the models to recover.
+                if not getattr(self.video_processor, "oom_reported", False):
+                    self.video_processor.oom_reported = True
+                    self.main_window.cuda_oom_signal.emit()
+                return
             logger.exception("Error while processing frame %s", self.frame_number)
             # Report once per run instead of spamming a dialog for every frame.
             if not getattr(self.video_processor, "error_reported", False):
@@ -176,6 +216,17 @@ class FrameWorker(threading.Thread):
                             sim = self.models_processor.findCosineDistance(fface['embedding'], target_face.get_embedding(control['RecognitionModelSelection'])) # Recognition for comparing
                             if sim>=parameters['SimilarityThresholdSlider']:
                                 s_e = None
+                                if (
+                                    parameters['FaceSmoothingEnableToggle']
+                                    and not self.is_single_frame
+                                    and self.video_processor.file_type in ('video', 'webcam')
+                                ):
+                                    fface['kps_5'] = self.main_window.smooth_face_keypoints(
+                                        target_face.face_id,
+                                        fface['kps_5'],
+                                        parameters['FaceSmoothingAmountSlider'],
+                                        self.frame_number,
+                                    )
                                 fface['kps_5'] = self.keypoints_adjustments(fface['kps_5'], parameters) #Make keypoints adjustments
                                 arcface_model = self.models_processor.get_arcface_model(parameters['SwapModelSelection'])
                                 dfm_model=parameters['DFMModelSelection']
@@ -730,6 +781,10 @@ class FrameWorker(threading.Thread):
             elif parameters['AutoColorTransferTypeSelection'] == 'DFL_Orig':
                 swap = faceutil.histogram_matching_DFL_Orig(original_face_512, swap, t512(swap_mask), parameters["AutoColorBlendAmountSlider"])
 
+            elif parameters['AutoColorTransferTypeSelection'] == 'LAB_Mask':
+                # Mask-aware Reinhard transfer using only the face pixels.
+                swap = faceutil.lab_color_transfer(original_face_512, swap, t512(swap_mask), parameters["AutoColorBlendAmountSlider"])
+
         # Apply color corrections
         if parameters['ColorEnableToggle']:
             swap = torch.unsqueeze(swap,0).contiguous()
@@ -759,7 +814,7 @@ class FrameWorker(threading.Thread):
                 swap = faceutil.jpegBlur(swap, parameters["JPEGCompressionAmountSlider"])
             except Exception:  # pylint: disable=broad-exception-caught
                 logger.debug("jpegBlur failed", exc_info=True)
-        if parameters['FinalBlendAdjEnableToggle'] and parameters['FinalBlendAdjEnableToggle'] > 0:
+        if parameters['FinalBlendAdjEnableToggle']:
             final_blur_strength = parameters['FinalBlendAmountSlider']  # Ein Parameter steuert beides
             # Bestimme kernel_size und sigma basierend auf dem Parameter
             kernel_size = 2 * final_blur_strength + 1  # Ungerade Zahl, z.B. 3, 5, 7, ...
@@ -775,7 +830,13 @@ class FrameWorker(threading.Thread):
         # Combine border and swap mask, scale, and apply to swap
         swap_mask = torch.mul(swap_mask, border_mask)
         swap_mask = t512(swap_mask)
-        
+
+        if parameters['SeamBlendEnableToggle']:
+            # Keep the un-premultiplied swap and its mask for a multi-band blend
+            # at compositing time (see below).
+            swap_foreground_512 = swap.clone()
+            seam_alpha_512 = swap_mask.clone()
+
         swap = torch.mul(swap, swap_mask)
 
         # For face comparing
@@ -813,6 +874,22 @@ class FrameWorker(threading.Thread):
         if bottom>img.shape[1]:
             bottom=img.shape[1]
 
+        if parameters['SeamBlendEnableToggle']:
+            # Multi-band blend of the raw swap over the background through the
+            # (feathered) mask, which hides the transition seam/halo.
+            def _unwarp_seam(tensor):
+                tensor = v2.functional.pad(tensor, (0,0,img.shape[2]-512, img.shape[1]-512))
+                tensor = v2.functional.affine(tensor, tform.inverse.rotation*57.2958, (tform.inverse.translation[0], tform.inverse.translation[1]), tform.inverse.scale, 0, interpolation=v2.InterpolationMode.BILINEAR, center=(0,0))
+                return tensor[:, top:bottom, left:right]
+
+            foreground = _unwarp_seam(swap_foreground_512).permute(1, 2, 0)
+            seam_alpha = _unwarp_seam(seam_alpha_512).permute(1, 2, 0)
+            background = img[0:3, top:bottom, left:right].permute(1, 2, 0)
+            blended = faceutil.laplacian_blend(foreground, background, seam_alpha)
+            blended = blended.type(torch.uint8).permute(2, 0, 1)
+            img[0:3, top:bottom, left:right] = blended
+            return img, original_face_512_clone, swap_mask_clone
+
         # Untransform the swap
         swap = v2.functional.pad(swap, (0,0,img.shape[2]-512, img.shape[1]-512))
         swap = v2.functional.affine(swap, tform.inverse.rotation*57.2958, (tform.inverse.translation[0], tform.inverse.translation[1]), tform.inverse.scale, 0,interpolation=v2.InterpolationMode.BILINEAR, center = (0,0) )
@@ -842,6 +919,11 @@ class FrameWorker(threading.Thread):
 
     def enhance_core(self, img, control):
         enhancer_type = control['FrameEnhancerTypeSelection']
+        logger.debug(
+            "Frame enhancer start: type=%s img=%s dtype=%s device=%s; %s",
+            enhancer_type, tuple(img.shape), img.dtype, img.device,
+            self.models_processor.vram_report(),
+        )
 
         match enhancer_type:
             case 'RealEsrgan-x2-Plus' | 'RealEsrgan-x4-Plus' | 'BSRGan-x2' | 'BSRGan-x4' | 'UltraSharp-x4' | 'UltraMix-x4' | 'RealEsr-General-x4v3':
@@ -861,7 +943,13 @@ class FrameWorker(threading.Thread):
                 image = torch.div(image, max_range)
                 image = torch.unsqueeze(image, 0).contiguous()
 
+                _enhancer_trace(enhancer_type, "Frame enhancer '%s': tiled upscale tile=%s scale=%s image=%s; %s",
+                             enhancer_type, tile_size, scale, tuple(image.shape),
+                             self.models_processor.vram_report())
                 image = self.models_processor.run_enhance_frame_tile_process(image, enhancer_type, tile_size=tile_size, scale=scale)
+                _enhancer_trace(enhancer_type, "Frame enhancer '%s': tiled upscale done image=%s; %s",
+                             enhancer_type, tuple(image.shape),
+                             self.models_processor.vram_report())
 
                 image = torch.squeeze(image)
                 image = torch.clamp(image, 0, 1)
@@ -890,6 +978,9 @@ class FrameWorker(threading.Thread):
 
                 output = torch.empty((image.shape), dtype=torch.float32, device=self.models_processor.device).contiguous()
 
+                _enhancer_trace(enhancer_type, "Frame enhancer '%s': deoldify in=%s; %s",
+                             enhancer_type, tuple(image.shape),
+                             self.models_processor.vram_report())
                 match enhancer_type:
                     case 'DeOldify-Artistic':
                         self.models_processor.run_deoldify_artistic(image, output)
@@ -897,6 +988,9 @@ class FrameWorker(threading.Thread):
                         self.models_processor.run_deoldify_stable(image, output)
                     case 'DeOldify-Video':
                         self.models_processor.run_deoldify_video(image, output)
+                _enhancer_trace(enhancer_type, "Frame enhancer '%s': deoldify raw out=%s; %s",
+                             enhancer_type, tuple(output.shape),
+                             self.models_processor.vram_report())
 
                 output = torch.squeeze(output)
                 t_resize_o = v2.Resize((h, w), interpolation=v2.InterpolationMode.BILINEAR, antialias=False)
@@ -960,15 +1054,23 @@ class FrameWorker(threading.Thread):
                 output_ab = torch.empty((1, 2, render_factor, render_factor), dtype=torch.float32, device=self.models_processor.device)
 
                 # Esegui il modello
+                _enhancer_trace(enhancer_type, "Frame enhancer '%s': ddcolor in=%s %s out=%s; %s",
+                             enhancer_type, tuple(tensor_gray_rgb.shape), tensor_gray_rgb.dtype,
+                             tuple(output_ab.shape), self.models_processor.vram_report())
                 match enhancer_type:
                     case 'DDColor-Artistic':
                         self.models_processor.run_ddcolor_artistic(tensor_gray_rgb, output_ab)
                     case 'DDColor':
                         self.models_processor.run_ddcolor(tensor_gray_rgb, output_ab)
+                _enhancer_trace(enhancer_type, "Frame enhancer '%s': ddcolor raw out=%s; %s",
+                             enhancer_type, tuple(output_ab.shape),
+                             self.models_processor.vram_report())
 
                 output_ab = output_ab.squeeze(0)  # (2, render_factor, render_factor)
 
                 t_resize_o = v2.Resize((img.size(1), img.size(2)), interpolation=v2.InterpolationMode.BILINEAR, antialias=False)
+                _enhancer_trace(enhancer_type, "Frame enhancer '%s': ddcolor resize to %s",
+                                enhancer_type, (int(img.size(1)), int(img.size(2))))
                 output_lab_resize = t_resize_o(output_ab)
 
                 # Combina il canale L originale con il risultato del modello
@@ -981,15 +1083,22 @@ class FrameWorker(threading.Thread):
                 #output_rgb = torch.from_numpy(output_rgb).to(self.models_processor.device)
                 #output_rgb = output_rgb.permute(2, 0, 1)
                 #'''
+                _enhancer_trace(enhancer_type, "Frame enhancer '%s': ddcolor lab_to_rgb output_lab=%s",
+                                enhancer_type, tuple(output_lab.shape))
                 output_rgb = faceutil.lab_to_rgb(output_lab, True)  # (3, original_H, original_W)
 
                 # Miscela le immagini
                 alpha = float(control["FrameEnhancerBlendSlider"]) / 100.0
                 blended_img = torch.add(torch.mul(output_rgb, alpha), torch.mul(img, 1 - alpha))
+                _enhancer_trace(enhancer_type, "Frame enhancer '%s': ddcolor blend output_rgb=%s img=%s",
+                                enhancer_type, tuple(output_rgb.shape), tuple(img.shape))
 
                 # Converti in uint8
                 img = blended_img.type(torch.uint8)
 
+        _enhancer_trace(enhancer_type, "Frame enhancer done: type=%s out=%s dtype=%s; %s",
+                     enhancer_type, tuple(img.shape), img.dtype,
+                     self.models_processor.vram_report())
         return img
 
     def apply_face_expression_restorer(self, driving, target, parameters):

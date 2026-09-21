@@ -18,6 +18,8 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 import faulthandler  # noqa: E402
 import gc  # noqa: E402
 
+import numpy as np  # noqa: E402
+
 faulthandler.enable()
 gc.disable()  # avoid GC-triggered C++ teardown while CUDA/Qt are alive
 
@@ -77,6 +79,44 @@ def main():
     check(APP_VERSION in window.windowTitle(), f"window title contains version {APP_VERSION}")
     check(window.tabWidget.count() == 4, "Control Options has 4 tabs")
     check(len(window.parameter_widgets) > 20, "parameter widgets were created")
+
+    # Face smoothing (temporal landmark EMA) must be registered and behave.
+    check("FaceSmoothingEnableToggle" in window.default_parameters
+          and "FaceSmoothingAmountSlider" in window.default_parameters,
+          "face smoothing parameters are registered")
+    check("FaceSmoothingEnableToggle" in window.parameter_widgets
+          and "FaceSmoothingAmountSlider" in window.parameter_widgets,
+          "face smoothing widgets were created")
+    kps = np.array([[0, 0], [10, 0], [5, 10], [2, 15], [8, 15]], dtype=np.float32)
+    window.reset_face_smoothing()
+    first = window.smooth_face_keypoints(1, kps, 60, 0)
+    second = window.smooth_face_keypoints(1, kps + 20.0, 60, 1)
+    check(np.allclose(first, kps) and 0 < float(np.max(np.abs(second - kps))) < 20.0,
+          "face smoothing EMA moves toward the new observation")
+    window.reset_face_smoothing()
+    check(np.allclose(window.smooth_face_keypoints(2, kps, 0, 0), kps),
+          "face smoothing disabled returns input unchanged")
+
+    # Compositing/color helpers (pure CPU math).
+    from app.processors.utils import faceutil
+
+    fg = torch.full((32, 32, 3), 200.0)
+    bg = torch.full((32, 32, 3), 40.0)
+    ones = torch.ones((32, 32, 1))
+    zeros = torch.zeros((32, 32, 1))
+    check(float(faceutil.laplacian_blend(fg, bg, ones).mean()) > 180.0,
+          "laplacian_blend(alpha=1) keeps the foreground")
+    check(float(faceutil.laplacian_blend(fg, bg, zeros).mean()) < 60.0,
+          "laplacian_blend(alpha=0) keeps the background")
+
+    source = torch.zeros((3, 32, 32))
+    source[0] = 200.0
+    source[1] = 150.0
+    source[2] = 120.0
+    target = torch.rand((3, 32, 32)) * 80.0
+    matched = faceutil.lab_color_transfer(source, target, torch.ones((32, 32, 1)), 100)
+    check(bool(torch.allclose(matched.mean(dim=(1, 2)), source[:, 0, 0], atol=6.0)),
+          "lab_color_transfer matches the source color statistics")
 
     # Standard Qt widgets that must NOT be the Fluent variants (they broke rendering).
     check(type(window.videoSeekSlider) is QtWidgets.QSlider, "videoSeekSlider is a plain QSlider")

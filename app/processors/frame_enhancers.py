@@ -1,4 +1,5 @@
 import math
+import logging
 from typing import TYPE_CHECKING
 
 import torch
@@ -7,6 +8,20 @@ from torchvision.transforms import v2
 
 if TYPE_CHECKING:
     from app.processors.models_processor import ModelsProcessor
+
+logger = logging.getLogger(__name__)
+
+# Enhancer tracing is per-frame; cap it (per enhancer) so the log stays readable.
+_TRACE_LIMIT = 8
+_trace_counts: dict = {}
+
+
+def _trace(key, message, *args):
+    count = _trace_counts.get(key, 0)
+    if count < _TRACE_LIMIT:
+        _trace_counts[key] = count + 1
+        logger.debug(message, *args)
+
 
 class FrameEnhancers:
     def __init__(self, models_processor: 'ModelsProcessor'):
@@ -216,9 +231,16 @@ class FrameEnhancers:
 
     def run_ddcolor_artistic(self, image, output):
         if not self.models_processor.models['DDColorArt']:
+            logger.info("Enhancer 'DDColor-Artistic': loading model (this can take a while)")
             self.models_processor.models['DDColorArt'] = self.models_processor.load_model('DDColorArt')
 
+        vram = self.models_processor.vram_report()
+        _trace('DDColor-Artistic', "Enhancer 'DDColor-Artistic': input=%s %s output=%s %s",
+               tuple(image.shape), image.dtype, tuple(output.shape), vram)
+
+        _trace('DDColor-Artistic', "Enhancer 'DDColor-Artistic': creating io_binding")
         io_binding = self.models_processor.models['DDColorArt'].io_binding()
+        _trace('DDColor-Artistic', "Enhancer 'DDColor-Artistic': binding input/output")
         io_binding.bind_input(name='input', device_type=self.models_processor.device, device_id=0, element_type=np.float32, shape=image.size(), buffer_ptr=image.data_ptr())
         io_binding.bind_output(name='output', device_type=self.models_processor.device, device_id=0, element_type=np.float32, shape=output.size(), buffer_ptr=output.data_ptr())
 
@@ -226,13 +248,27 @@ class FrameEnhancers:
             torch.cuda.synchronize()
         elif self.models_processor.device != "cpu":
             self.models_processor.syncvec.cpu()
-        self.models_processor.models['DDColorArt'].run_with_iobinding(io_binding)
+        _trace('DDColor-Artistic', "Enhancer 'DDColor-Artistic': calling run_with_iobinding (%s)", vram)
+        try:
+            self.models_processor.models['DDColorArt'].run_with_iobinding(io_binding)
+        except Exception:  # pylint: disable=broad-exception-caught
+            logger.exception("Enhancer 'DDColor-Artistic': run_with_iobinding failed (input=%s output=%s); %s",
+                             tuple(image.shape), tuple(output.shape), vram)
+            raise
+        _trace('DDColor-Artistic', "Enhancer 'DDColor-Artistic': run OK; %s", self.models_processor.vram_report())
 
     def run_ddcolor(self, image, output):
         if not self.models_processor.models['DDcolor']:
+            logger.info("Enhancer 'DDColor': loading model (this can take a while)")
             self.models_processor.models['DDcolor'] = self.models_processor.load_model('DDcolor')
 
+        vram = self.models_processor.vram_report()
+        _trace('DDColor', "Enhancer 'DDColor': input=%s %s output=%s %s",
+               tuple(image.shape), image.dtype, tuple(output.shape), vram)
+
+        _trace('DDColor', "Enhancer 'DDColor': creating io_binding")
         io_binding = self.models_processor.models['DDcolor'].io_binding()
+        _trace('DDColor', "Enhancer 'DDColor': binding input/output")
         io_binding.bind_input(name='input', device_type=self.models_processor.device, device_id=0, element_type=np.float32, shape=image.size(), buffer_ptr=image.data_ptr())
         io_binding.bind_output(name='output', device_type=self.models_processor.device, device_id=0, element_type=np.float32, shape=output.size(), buffer_ptr=output.data_ptr())
 
@@ -240,4 +276,11 @@ class FrameEnhancers:
             torch.cuda.synchronize()
         elif self.models_processor.device != "cpu":
             self.models_processor.syncvec.cpu()
-        self.models_processor.models['DDcolor'].run_with_iobinding(io_binding)
+        _trace('DDColor', "Enhancer 'DDColor': calling run_with_iobinding (%s)", vram)
+        try:
+            self.models_processor.models['DDcolor'].run_with_iobinding(io_binding)
+        except Exception:  # pylint: disable=broad-exception-caught
+            logger.exception("Enhancer 'DDColor': run_with_iobinding failed (input=%s output=%s); %s",
+                             tuple(image.shape), tuple(output.shape), vram)
+            raise
+        _trace('DDColor', "Enhancer 'DDColor': run OK; %s", self.models_processor.vram_report())

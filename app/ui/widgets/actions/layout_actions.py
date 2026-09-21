@@ -373,6 +373,18 @@ def set_up_settings_menu(main_window: 'MainWindow'):
     check_models_action.setProperty("_i18n_src", "Check Models")
     check_models_action.triggered.connect(partial(control_actions.check_models, main_window))
 
+    # Parameter presets (named, reusable across target faces)
+    presets_menu = settings_menu.addMenu(i18n.tr("Presets"))
+    presets_menu.setProperty("_i18n_src", "Presets")
+    for _label, _handler in (
+        ("Save Current Face as Preset", control_actions.save_face_preset),
+        ("Apply Preset to Current Face", control_actions.apply_face_preset),
+        ("Delete Preset", control_actions.delete_face_preset),
+    ):
+        _action = presets_menu.addAction(i18n.tr(_label))
+        _action.setProperty("_i18n_src", _label)
+        _action.triggered.connect(partial(_handler, main_window))
+
     # About
     settings_menu.addSeparator()
     about_action = settings_menu.addAction(i18n.tr("About"))

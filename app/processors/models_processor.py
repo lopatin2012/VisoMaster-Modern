@@ -3,6 +3,7 @@ import os
 import subprocess as sp
 import gc
 import logging
+import time
 from typing import Dict, TYPE_CHECKING
 
 from packaging import version
@@ -141,26 +142,79 @@ class ModelsProcessor(QtCore.QObject):
             ):
                 setattr(self, _method_name, perf.wrap(getattr(self, _method_name), _method_name))
 
+    @staticmethod
+    def vram_report() -> str:
+        """Human-readable CUDA memory usage for diagnostics (never raises)."""
+        if not torch.cuda.is_available():
+            return "cuda=unavailable"
+        try:
+            free_bytes, total_bytes = torch.cuda.mem_get_info()
+            return (
+                f"alloc={torch.cuda.memory_allocated() / 1e6:.0f}MB "
+                f"reserved={torch.cuda.memory_reserved() / 1e6:.0f}MB "
+                f"free={free_bytes / 1e6:.0f}/{total_bytes / 1e6:.0f}MB"
+            )
+        except Exception:  # pylint: disable=broad-exception-caught
+            return "cuda mem info unavailable"
+
     def load_model(self, model_name, session_options=None):
         with self.model_lock:
+            # Return the already-loaded session; also prevents two worker threads
+            # from loading the same (potentially huge) model twice concurrently.
+            if self.models.get(model_name):
+                return self.models[model_name]
+
             self.main_window.model_loading_signal.emit()
-            if not is_file_exists(self.models_path[model_name]):
-                logger.error("Model file not found: %s", self.models_path[model_name])
+            model_path = self.models_path[model_name]
+            if not is_file_exists(model_path):
+                logger.error("Model file not found: %s", model_path)
                 self.main_window.model_loaded_signal.emit()
                 raise FileNotFoundError(
-                    f"Model file not found: {self.models_path[model_name]}. "
+                    f"Model file not found: {model_path}. "
                     "Run download_models.py to download the models."
                 )
-            if session_options is None:
-                model_instance = onnxruntime.InferenceSession(self.models_path[model_name], providers=self.providers)
-            else:
-                model_instance = onnxruntime.InferenceSession(self.models_path[model_name], sess_options=session_options, providers=self.providers)
+            size_mb = os.path.getsize(model_path) / 1e6 if os.path.isfile(model_path) else -1
+            logger.info(
+                "Loading model '%s' (%.1f MB) from %s; %s",
+                model_name, size_mb, model_path, self.vram_report(),
+            )
+            started = time.perf_counter()
+            try:
+                if session_options is None:
+                    model_instance = onnxruntime.InferenceSession(model_path, providers=self.providers)
+                else:
+                    model_instance = onnxruntime.InferenceSession(model_path, sess_options=session_options, providers=self.providers)
+            except Exception:  # pylint: disable=broad-exception-caught
+                logger.exception(
+                    "Failed to create InferenceSession for '%s' (%.1f MB); %s",
+                    model_name, size_mb, self.vram_report(),
+                )
+                self.main_window.model_loaded_signal.emit()
+                raise
 
-            # Check if another thread has already loaded an instance for this model, if yes then delete the current one and return that instead
-            if self.models[model_name]:
+            # Another thread may have finished loading while we held the lock:
+            # keep the first instance and drop ours.
+            if self.models.get(model_name):
                 del model_instance
                 gc.collect()
+                self.main_window.model_loaded_signal.emit()
                 return self.models[model_name]
+
+            self.models[model_name] = model_instance
+            try:
+                logger.debug(
+                    "Model '%s' IO: inputs=%s outputs=%s",
+                    model_name,
+                    [(i.name, i.shape) for i in model_instance.get_inputs()],
+                    [(o.name, o.shape) for o in model_instance.get_outputs()],
+                )
+            except Exception:  # pylint: disable=broad-exception-caught
+                logger.debug("Model '%s' IO introspection failed", model_name, exc_info=True)
+            logger.info(
+                "Loaded model '%s' in %.2fs via %s; %s",
+                model_name, time.perf_counter() - started,
+                model_instance.get_providers(), self.vram_report(),
+            )
             self.main_window.model_loaded_signal.emit()
 
             return model_instance
@@ -232,6 +286,23 @@ class ModelsProcessor(QtCore.QObject):
         
         self.clip_session = []
         gc.collect()
+
+    def free_gpu_memory(self):
+        """Unload every lazily-loaded session and release cached GPU memory.
+
+        Only safe to call when no inference is in flight (e.g. after stopping
+        processing and joining the worker threads, as done for CUDA OOM).
+        Models reload automatically on next use.
+        """
+        with self.model_lock:
+            self.delete_models()
+            self.delete_models_trt()
+            self.delete_models_dfm()
+        try:
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+        except Exception:  # pylint: disable=broad-exception-caught
+            logger.debug("torch.cuda.empty_cache() failed", exc_info=True)
 
     def showModelLoadingProgressBar(self):
         self.main_window.model_load_dialog.show()

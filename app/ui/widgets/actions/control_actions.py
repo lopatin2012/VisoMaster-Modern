@@ -1,4 +1,7 @@
 from typing import TYPE_CHECKING
+import json
+import logging
+import os
 import torch
 import qdarkstyle
 from PySide6 import QtWidgets 
@@ -10,6 +13,12 @@ from app.ui.widgets.actions import common_actions as common_widget_actions
 from app.ui.styles.fluent_theme import apply_fluent_theme
 from app.helpers import i18n, asset_check
 from app.version import APP_NAME, APP_VERSION
+
+logger = logging.getLogger(__name__)
+
+# Named face-parameter presets. CWD-relative like last_workspace.json; the broad
+# `*.json` .gitignore rule keeps it untracked.
+PRESETS_FILE = "parameter_presets.json"
 
 #'''
 #    Define functions here that has to be executed when value of a control widget (In the settings tab) is changed.
@@ -118,3 +127,92 @@ def toggle_virtualcam(main_window: 'MainWindow', toggle_value=False):
 def enable_virtualcam(main_window: 'MainWindow', backend):
     print('backend', backend)
     main_window.video_processor.enable_virtualcam(backend=backend)
+
+
+def _load_presets() -> dict:
+    if not os.path.isfile(PRESETS_FILE):
+        return {}
+    try:
+        with open(PRESETS_FILE, "r", encoding="utf-8") as file:
+            data = json.load(file)
+        return data if isinstance(data, dict) else {}
+    except Exception:  # pylint: disable=broad-exception-caught
+        logger.exception("Failed to read %s", PRESETS_FILE)
+        return {}
+
+
+def _save_presets(presets: dict) -> None:
+    with open(PRESETS_FILE, "w", encoding="utf-8") as file:
+        json.dump(presets, file, indent=4)
+
+
+def _warn(main_window: 'MainWindow', title, message):
+    common_widget_actions.create_and_show_messagebox(
+        main_window, i18n.tr(title), i18n.tr(message), parent_widget=main_window
+    )
+
+
+def save_face_preset(main_window: 'MainWindow'):
+    """Save the selected target face's parameters as a named preset."""
+    face_id = main_window.selected_target_face_id
+    if not face_id:
+        _warn(main_window, "No target face selected",
+              "Select a target face before saving a preset.")
+        return
+    name, ok = QtWidgets.QInputDialog.getText(
+        main_window, i18n.tr("Save Preset"), i18n.tr("Preset name:")
+    )
+    name = (name or "").strip()
+    if not ok or not name:
+        return
+    presets = _load_presets()
+    presets[name] = dict(main_window.parameters[face_id])
+    try:
+        _save_presets(presets)
+    except Exception:  # pylint: disable=broad-exception-caught
+        logger.exception("Failed to write %s", PRESETS_FILE)
+        _warn(main_window, "Preset Error", "Could not save the preset.")
+
+
+def apply_face_preset(main_window: 'MainWindow'):
+    """Apply a saved preset to the selected target face."""
+    face_id = main_window.selected_target_face_id
+    if not face_id:
+        _warn(main_window, "No target face selected",
+              "Select a target face before applying a preset.")
+        return
+    presets = _load_presets()
+    if not presets:
+        _warn(main_window, "No Presets", "No presets saved yet.")
+        return
+    name, ok = QtWidgets.QInputDialog.getItem(
+        main_window, i18n.tr("Apply Preset"), i18n.tr("Preset:"), sorted(presets), 0, False
+    )
+    if not ok or not name:
+        return
+    # Only overwrite keys the preset knows about, keeping any newer parameters.
+    target = main_window.parameters[face_id]
+    for key, value in presets.get(name, {}).items():
+        if key in main_window.default_parameters:
+            target[key] = value
+    common_widget_actions.set_widgets_values_using_face_id_parameters(main_window, face_id=face_id)
+    common_widget_actions.refresh_frame(main_window)
+
+
+def delete_face_preset(main_window: 'MainWindow'):
+    """Delete a saved preset."""
+    presets = _load_presets()
+    if not presets:
+        _warn(main_window, "No Presets", "No presets saved yet.")
+        return
+    name, ok = QtWidgets.QInputDialog.getItem(
+        main_window, i18n.tr("Delete Preset"), i18n.tr("Preset:"), sorted(presets), 0, False
+    )
+    if not ok or not name or name not in presets:
+        return
+    presets.pop(name, None)
+    try:
+        _save_presets(presets)
+    except Exception:  # pylint: disable=broad-exception-caught
+        logger.exception("Failed to write %s", PRESETS_FILE)
+        _warn(main_window, "Preset Error", "Could not delete the preset.")

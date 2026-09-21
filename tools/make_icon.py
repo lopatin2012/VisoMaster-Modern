@@ -9,6 +9,7 @@ from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 
 OUT = Path(__file__).resolve().parents[1] / "app" / "ui" / "core" / "media" / "modern_icon.png"
+ICO_OUT = OUT.with_suffix(".ico")
 
 SIZE = 256
 BG = (79, 172, 201, 255)      # accent #4facc9
@@ -59,7 +60,10 @@ def main() -> None:
 
     OUT.parent.mkdir(parents=True, exist_ok=True)
     img.save(OUT)
+    # Multi-size .ico for the Windows taskbar / alt-tab / shortcuts.
+    img.save(ICO_OUT, sizes=[(16, 16), (24, 24), (32, 32), (48, 48), (64, 64), (128, 128), (256, 256)])
     print(f"wrote {OUT}")
+    print(f"wrote {ICO_OUT}")
 
 
 if __name__ == "__main__":

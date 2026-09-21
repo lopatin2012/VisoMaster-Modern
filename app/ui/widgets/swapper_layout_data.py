@@ -217,6 +217,25 @@ SWAPPER_LAYOUT_DATA: LayoutDictTypes = {
             'help': 'Shifts the mouth Right detection point up and down.'
         },
     },
+    'Face Smoothing': {
+        'FaceSmoothingEnableToggle': {
+            'level': 1,
+            'label': 'Face Smoothing',
+            'default': False,
+            'help': 'Temporally smooth detected face landmarks across video frames to reduce jitter. Recommended for video, not for still images.'
+        },
+        'FaceSmoothingAmountSlider': {
+            'level': 2,
+            'label': 'Smoothing Amount',
+            'min_value': '1',
+            'max_value': '100',
+            'default': '60',
+            'step': 1,
+            'parentToggle': 'FaceSmoothingEnableToggle',
+            'requiredToggleValue': True,
+            'help': 'Higher values smooth more strongly but may lag behind fast head or face motion.'
+        },
+    },
     'Face Similarity': {
         'SimilarityThresholdSlider': {
             'level': 1,
@@ -892,7 +911,7 @@ SWAPPER_LAYOUT_DATA: LayoutDictTypes = {
         'AutoColorTransferTypeSelection':{
             'level': 2,
             'label': 'Transfer Type',
-            'options': ['Test', 'Test_Mask', 'DFL_Test', 'DFL_Orig'],
+            'options': ['Test', 'Test_Mask', 'DFL_Test', 'DFL_Orig', 'LAB_Mask'],
             'default': 'Test',
             'parentToggle': 'AutoColorEnableToggle',
             'requiredToggleValue': True,
@@ -1052,6 +1071,12 @@ SWAPPER_LAYOUT_DATA: LayoutDictTypes = {
         }
     },
     'Blend Adjustments':{
+        'SeamBlendEnableToggle': {
+            'level': 1,
+            'label': 'Seamless Blend',
+            'default': False,
+            'help': 'Multi-band (Laplacian) blend of the swap into the frame to hide the transition seam. Slightly slower; useful when a border/halo is visible.'
+        },
         'FinalBlendAdjEnableToggle': {
             'level': 1,
             'label': 'Final Blend',

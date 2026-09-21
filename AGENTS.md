@@ -4,10 +4,12 @@ VisoMaster-Modern: fork of VisoMaster, a PySide6 desktop app for AI face swappin
 
 ## Run / setup
 - Modern dev env: `.venv` on **Python 3.11** with `requirements_cu129.txt` (CUDA 12.9 / Blackwell `sm_120`). Do NOT use Python 3.14 (unsupported wheels). Setup: `py -3.11 -m venv .venv` then `.venv\Scripts\python.exe -m pip install -r requirements_cu129.txt`.
+- `install.ps1` / `install.bat` automate setup (locate/install Python 3.11, create `.venv`, install requirements, run `download_models.py`, fetch ffmpeg into `dependencies/`). Flags: `-SkipModels`, `-SkipDeps`, `-Launch`. `Start.bat`/`Start_Portable.bat` only run, they do not install.
 - `requirements_cu129.txt` pins torch 2.8/torchvision 0.23/torchaudio 2.8 (`+cu129`), onnxruntime-gpu 1.23.2, TensorRT 10.13 via `tensorrt-cu12*` (NOT the `tensorrt` metapackage — on Windows 10.13+ it pulls CUDA-13 wheels and fails on the deprecated `nvidia-cuda-runtime-cu13`), and PySide6 6.10.3. This is the only requirements file (the legacy CUDA 11.8/12.4 stacks were removed).
 - Launch from the repo root only. Many paths are CWD-relative: `./model_assets` (`app/processors/models_data.py`), `app/ui/styles/*.qss` (`main.py`), `last_workspace.json`, `tensorrt-engines/`, `temp_output.mp4`.
 - `Start.bat` launches via `.venv` (falls back to `python`), runs `convert_ui_to_py.bat`, and puts `dependencies/` + `.venv\Scripts` on PATH. `Start_Portable.bat` also prefers `.venv` but keeps `scripts/setenv.bat` for the bundled runtime. Linux: `.venv/bin/python main.py`.
 - `main.py` imports `torch` before `PySide6` on purpose (PySide6 historically mutated `typing.Self`, breaking torch/torchvision). Keep that order in any new entrypoint.
+- `main.py` (`os._exit`) and `tools/smoke_test.py` (`app/helpers/process_exit.hard_exit`) terminate without normal interpreter teardown on purpose: CUDA/TensorRT + Qt DLL detach segfaults during Python finalization on Windows. Do not "fix" this.
 - `dependencies/` is the bundled runtime (Python, CUDA, TensorRT, `ffmpeg.exe`, git-portable); `scripts/setenv.bat` prepends its paths and `main.py` auto-adds `dependencies/` to PATH. `scripts/update_cu129.bat` pulls `origin/main` (hard reset) then reinstalls requirements.
 - Models are gitignored. `python download_models.py` fetches into `model_assets/` and hash-checks against `app/processors/models_data.py` (the source of truth for names/paths/hashes). DFM models go in `model_assets/dfm_models/`. Manual installs also need binaries from the visomaster-assets release copied into `dependencies/`.
 - A few small support files are tracked on purpose (via `.gitignore` exceptions) because no assets release ships them: `model_assets/meanshape_68.pkl`, `model_assets/liveportrait_onnx/lip_array.pkl`, `model_assets/grid_sample_3d_plugin.dll`, `model_assets/libgrid_sample_3d_plugin.so`.
@@ -19,6 +21,8 @@ VisoMaster-Modern: fork of VisoMaster, a PySide6 desktop app for AI face swappin
 
 ## Performance / diagnostics
 - `main.py --profile` (or `VISOMASTER_PROFILE=1`) enables the opt-in per-stage profiler in `app/helpers/perf.py`; it wraps model methods plus preview/display and prints averages every 60 frames and on stop. No-op when disabled.
+- `VISOMASTER_DEBUG=1` raises the `app.*` loggers to DEBUG (model loading + VRAM, enhancer tracing, display path). Off by default because it is per-frame noisy.
+- `main.py` enables `faulthandler` and `app/helpers/crash_info.py`; native crashes append a `[crash_info] ACCESS_VIOLATION ... module=<dll>` line plus a Python stack to `faulthandler.log` (Windows VEH, no-op elsewhere). Single-image frames are processed synchronously on the GUI thread (`start_frame_worker(..., is_single_frame=True)`), so do not run nested `QApplication.processEvents()` there.
 - Measured on an RTX 5070 Ti: the TensorRT EP was **not** faster than CUDA EP for the bundled models and builds engines for minutes, so CUDA stays the default (`trt_fp16_enable` is set for opt-in TRT). Batching is not possible: Inswapper is `batch=1` and ArcFace output is fixed `(1,512)`. `h264_nvenc` is auto-selected for recording.
 - Avoid per-frame `torch.cuda.empty_cache()` / `nvidia-smi` polling on hot paths (removed from the display path).
 - Errors are logged to a rotating `visomaster.log` via `app/helpers/logging_setup.py` (initialised first thing in `main.py`); uncaught exceptions get excepthooks, and frame/virtual-camera errors also surface as dialogs. `app/helpers/asset_check.py` warns at startup about missing support files / no models.
@@ -26,7 +30,7 @@ VisoMaster-Modern: fork of VisoMaster, a PySide6 desktop app for AI face swappin
 ## UI / theming
 - Parameter/control widgets live in `app/ui/widgets/widget_components.py` and subclass **qfluentwidgets** (`SwitchButton`, `ComboBox`, `Slider`, `LineEdit`, `ToolButton`). They must keep the legacy APIs that `layout_actions.py` and `show_hide_related_widgets` rely on: `toggled` signal, `set_value`, `reset_to_default_value`, `line_edit`, `reset_default_button`, `label_widget`, `group_layout_data`, `start_animation`.
 - qfw quirks: `SwitchButton` emits `checkedChanged` (not `toggled`) and is not a `QPushButton`; `ComboBox` is `QPushButton`-based, not a `QComboBox`; all qfw constructors are `(parent=None)` and reject stray kwargs — pass `kwargs.get('parent')` explicitly.
-- App icon: `app/ui/core/media/modern_icon.png`, loaded from the file at runtime (not embedded in `media_rc.py`) and generated by `tools/make_icon.py`.
+- App icon: `app/ui/core/media/modern_icon.png` (+ `.ico` for the Windows taskbar), loaded from the file at runtime (not embedded in `media_rc.py`) and generated by `tools/make_icon.py`. `main.py` sets a Windows AppUserModelID so the taskbar shows the app icon instead of `python.exe`.
 - Theme: `app/ui/styles/fluent_theme.py` sets the qfw theme/accent. `main.py` and `control_actions.change_theme` still apply `qdarktheme` + `app/ui/styles/{dark,light}_styles.qss` for the standard Qt widgets that qfw doesn't replace (docks, tabs, lists, menus).
 
 ## Localization (i18n)
@@ -44,6 +48,7 @@ VisoMaster-Modern: fork of VisoMaster, a PySide6 desktop app for AI face swappin
 
 ## Architecture
 - Entrypoint: `main.py` -> `MainWindow` in `app/ui/main_ui.py` (NOT `app/ui/core/main_window.py`, which is the generated form class).
+- `app/version.py` (`APP_VERSION`/`APP_NAME`) is the single source of truth for the version shown in the window title / About dialog (asserted by the smoke test).
 - `app/processors/video_processor.py`: reads/displays frames with QTimers and dispatches frames to `FrameWorker` threads.
 - `app/processors/workers/frame_worker.py`: per-frame pipeline.
 - `app/processors/models_processor.py`: owns ONNX Runtime / TensorRT sessions plus per-task helpers (`face_detectors`, `face_swappers`, `face_restorers`, ...). Sessions are shared across worker threads; guard access with `model_lock`.
@@ -57,4 +62,4 @@ VisoMaster-Modern: fork of VisoMaster, a PySide6 desktop app for AI face swappin
 - `ParametersDict` (in `app/helpers/miscellaneous.py`) falls back to `default_parameters` for missing keys, so old saved workspaces load cleanly when new settings are added; defaults come from the layout entry.
 
 ## Ignored runtime artifacts
-`tensorrt-engines/`, `.thumbnails/`, `last_workspace.json`, `temp_output.mp4`, `output/`, `source_*/`, `dependencies/{Python,CUDA,TensorRT,git-portable}`. `.gitignore` also ignores broad patterns (`*.json`, `*.mp4`, `*.jpg`, `*.onnx`, `*.engine`, `*.dfm`, `*.exe`), so new data/config files are untracked unless forced.
+`tensorrt-engines/`, `.thumbnails/`, `last_workspace.json`, `parameter_presets.json` (named face-parameter presets; menu `Settings -> Presets`), `temp_output.mp4`, `output/`, `source_*/`, `dependencies/{Python,CUDA,TensorRT,git-portable}`. `.gitignore` also ignores broad patterns (`*.json`, `*.mp4`, `*.jpg`, `*.onnx`, `*.engine`, `*.dfm`, `*.exe`), so new data/config files are untracked unless forced.

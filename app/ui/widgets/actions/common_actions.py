@@ -233,6 +233,8 @@ def show_hide_related_widgets(main_window: 'MainWindow', parent_widget, parent_w
 def get_pixmap_from_frame(main_window: 'MainWindow', frame: np.ndarray):
     with perf.timer("preview_pixmap"):
         height, width, channel = frame.shape
+        logger.debug("get_pixmap_from_frame: shape=%s dtype=%s contiguous=%s",
+                     frame.shape, frame.dtype, frame.flags["C_CONTIGUOUS"])
         if channel == 2:
             # Frame in grayscale
             bytes_per_line = width
@@ -281,33 +283,36 @@ def clear_gpu_memory(main_window: 'MainWindow'):
     main_window.videoSeekSlider.markers = set()
     main_window.videoSeekSlider.update()
 
-def extract_frame_as_pixmap(media_file_path, file_type, webcam_index=False, webcam_backend=False):
+def thumbnail_frame_to_pixmap(frame):
+    """Build the 70x70 thumbnail QPixmap from a BGR frame.
+
+    QPixmap is GUI-thread only, so call this from the GUI thread (e.g. a slot),
+    never from a worker thread.
+    """
+    height, width, _ = frame.shape
+    bytes_per_line = 3 * width
+    q_img = QtGui.QImage(frame.data, width, height, bytes_per_line, QtGui.QImage.Format.Format_RGB888).rgbSwapped()
+    pixmap = QtGui.QPixmap.fromImage(q_img)
+    return pixmap.scaled(70, 70, QtCore.Qt.AspectRatioMode.KeepAspectRatio)
+
+
+def extract_thumbnail_frame(media_file_path, file_type, webcam_index=False, webcam_backend=False):
+    """Return the BGR frame to use as a media thumbnail (or None).
+
+    This runs on a worker thread, so it must not create a QPixmap (GUI-thread
+    only); callers convert the returned frame with ``thumbnail_frame_to_pixmap``.
+    """
     frame = False
 
-    def convert_thumbnail_frame_to_pixmap(frame):
-        # Convert the frame to QPixmap
-        height, width, _ = frame.shape
-        bytes_per_line = 3 * width
-        q_img = QtGui.QImage(frame.data, width, height, bytes_per_line, QtGui.QImage.Format.Format_RGB888).rgbSwapped()
-        pixmap = QtGui.QPixmap.fromImage(q_img)
-        pixmap = pixmap.scaled(70, 70, QtCore.Qt.AspectRatioMode.KeepAspectRatio)
-        return pixmap
-    
-    # For non-webcam media, check for cached thumbnail
+    # For non-webcam media, reuse a cached thumbnail if present
     if file_type in ['image', 'video']:
-        # Ensure thumbnail directory exists
         misc_helpers.ensure_thumbnail_dir()
-        
-        # Get hash and thumbnail path
         file_hash = misc_helpers.get_hash_from_filename(media_file_path)
         thumbnail_path = misc_helpers.get_thumbnail_path(file_hash)
-        
-        # Check if cached thumbnail exists
         if misc_helpers.is_file_exists(thumbnail_path):
-            frame = misc_helpers.read_image_file(thumbnail_path)
-            if frame is not None:
-                pixmap = convert_thumbnail_frame_to_pixmap(frame)
-                return pixmap
+            cached = misc_helpers.read_image_file(thumbnail_path)
+            if cached is not None:
+                return cached
     
     # If no cached thumbnail or it's a webcam, proceed with normal frame extraction
     if file_type == 'image':
@@ -339,11 +344,10 @@ def extract_frame_as_pixmap(media_file_path, file_type, webcam_index=False, webc
             return
 
     if isinstance(frame, np.ndarray):
-        # Save thumbnail for future use
-        if frame is not None and file_type != 'webcam':
+        # Save thumbnail for future use (image/video only; webcam has no cache path)
+        if file_type != 'webcam':
             misc_helpers.save_thumbnail(frame, thumbnail_path)
-        pixmap = convert_thumbnail_frame_to_pixmap(frame)
-        return pixmap
+        return frame
     return None
 
 def set_widgets_values_using_face_id_parameters(main_window: 'MainWindow', face_id=False):
@@ -430,11 +434,23 @@ def update_placeholder_visibility(main_window: 'MainWindow', list_widget:QtWidge
 
 @QtCore.Slot()
 def show_model_loading_dialog(main_window: 'MainWindow'):
-    main_window.model_loading_dialog = widget_components.LoadingDialog()
-    main_window.model_loading_dialog.show()
-    QtWidgets.QApplication.processEvents()
+    # Reuse a single dialog: recreating it while a previous instance is still
+    # alive lets Python GC delete a visible QWidget during event processing,
+    # which can crash the native side.
+    dialog = getattr(main_window, "model_loading_dialog", None)
+    if dialog is None:
+        dialog = widget_components.LoadingDialog()
+        main_window.model_loading_dialog = dialog
+    dialog.show()
+    # Never run a nested event loop while a frame is being processed synchronously
+    # on the GUI thread (re-entrancy corrupts Qt state and crashes later).
+    if not getattr(main_window.video_processor, "processing_single_frame", False):
+        QtWidgets.QApplication.processEvents()
 
 @QtCore.Slot()
 def hide_model_loading_dialog(main_window: 'MainWindow'):
-    main_window.model_loading_dialog.hide()
-    QtWidgets.QApplication.processEvents()
+    dialog = getattr(main_window, "model_loading_dialog", None)
+    if dialog is not None:
+        dialog.hide()
+    if not getattr(main_window.video_processor, "processing_single_frame", False):
+        QtWidgets.QApplication.processEvents()

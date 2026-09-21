@@ -7,6 +7,7 @@ are recorded instead of only printed/lost.
 
 import logging
 import logging.handlers
+import os
 import sys
 import threading
 
@@ -25,6 +26,12 @@ def setup_logging(level: int = logging.INFO) -> logging.Logger:
         return root
 
     root.setLevel(level)
+
+    # App diagnostics (model loading, enhancer tracing, VRAM, display path) are
+    # DEBUG-level and can be very noisy per frame. Enable them only on request:
+    #   set VISOMASTER_DEBUG=1
+    if os.environ.get("VISOMASTER_DEBUG", "").strip().lower() in ("1", "true", "yes", "on"):
+        logging.getLogger("app").setLevel(logging.DEBUG)
 
     file_handler = logging.handlers.RotatingFileHandler(
         LOG_FILE, maxBytes=2_000_000, backupCount=2, encoding="utf-8"

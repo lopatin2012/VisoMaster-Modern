@@ -59,6 +59,7 @@ env/
 
 # Runtime logs
 /visomaster.log*
+/faulthandler.log*
 
 # Tool caches
 .pytest_cache/

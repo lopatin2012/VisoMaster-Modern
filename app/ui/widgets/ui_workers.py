@@ -8,7 +8,6 @@ import cv2
 import torch
 import numpy
 from PySide6 import QtCore as qtc
-from PySide6.QtGui import QPixmap
 
 from app.processors.models_data import detection_model_mapping, landmark_model_mapping
 from app.helpers import miscellaneous as misc_helpers
@@ -23,9 +22,10 @@ logger = logging.getLogger(__name__)
 
 
 class TargetMediaLoaderWorker(qtc.QThread):
-    # Define signals to emit when loading is done or if there are updates
-    thumbnail_ready = qtc.Signal(str, QPixmap, str, str)  # Signal with media path and QPixmap and file_type, media_id
-    webcam_thumbnail_ready = qtc.Signal(str, QPixmap, str, str, int, int)
+    # Signals carry the raw BGR frame; the GUI-thread slot builds the QPixmap
+    # (QPixmap is not usable from a worker thread).
+    thumbnail_ready = qtc.Signal(str, numpy.ndarray, str, str)  # media path, frame, file_type, media_id
+    webcam_thumbnail_ready = qtc.Signal(str, numpy.ndarray, str, str, int, int)
     finished = qtc.Signal()  # Signal to indicate completion
 
     def __init__(self, main_window: 'MainWindow', folder_name=False, files_list=None, media_ids=None, webcam_mode=False, parent=None,):
@@ -71,14 +71,14 @@ class TargetMediaLoaderWorker(qtc.QThread):
                 break
             media_file_path = os.path.join(folder_name, media_file)
             file_type = misc_helpers.get_file_type(media_file_path)
-            pixmap = common_widget_actions.extract_frame_as_pixmap(media_file_path, file_type)
+            frame = common_widget_actions.extract_thumbnail_frame(media_file_path, file_type)
             if self.media_ids:
                 media_id = self.media_ids[i]
             else:
                 media_id = str(uuid.uuid1().int)
-            if pixmap:
+            if frame is not None:
                 # Emit the signal to update GUI
-                self.thumbnail_ready.emit(media_file_path, pixmap, file_type, media_id)
+                self.thumbnail_ready.emit(media_file_path, frame, file_type, media_id)
             i+=1
         # Show/Hide the placeholder text based on the number of items in ListWidget
         self.main_window.placeholder_update_signal.emit(self.main_window.targetVideosList, False)
@@ -91,14 +91,14 @@ class TargetMediaLoaderWorker(qtc.QThread):
             if not self._running:  # Check if the thread is still running
                 break
             file_type = misc_helpers.get_file_type(media_file_path)
-            pixmap = common_widget_actions.extract_frame_as_pixmap(media_file_path, file_type=file_type)
+            frame = common_widget_actions.extract_thumbnail_frame(media_file_path, file_type=file_type)
             if self.media_ids:
                 media_id = self.media_ids[i]
             else:
                 media_id = str(uuid.uuid1().int)
-            if pixmap:
+            if frame is not None:
                 # Emit the signal to update GUI
-                self.thumbnail_ready.emit(media_file_path, pixmap, file_type,media_id)
+                self.thumbnail_ready.emit(media_file_path, frame, file_type,media_id)
             i+=1
         self.main_window.placeholder_update_signal.emit(self.main_window.targetVideosList, False)
 
@@ -107,12 +107,12 @@ class TargetMediaLoaderWorker(qtc.QThread):
         camera_backend = CAMERA_BACKENDS[self.main_window.control['WebcamBackendSelection']]
         for i in range(int(self.main_window.control['WebcamMaxNoSelection'])):
             try:
-                pixmap = common_widget_actions.extract_frame_as_pixmap(media_file_path=f'Webcam {i}', file_type='webcam', webcam_index=i, webcam_backend=camera_backend)
+                frame = common_widget_actions.extract_thumbnail_frame(media_file_path=f'Webcam {i}', file_type='webcam', webcam_index=i, webcam_backend=camera_backend)
                 media_id = str(uuid.uuid1().int)
 
-                if pixmap:
+                if frame is not None:
                     # Emit the signal to update GUI
-                    self.webcam_thumbnail_ready.emit(f'Webcam {i}', pixmap, 'webcam',media_id, i, camera_backend)
+                    self.webcam_thumbnail_ready.emit(f'Webcam {i}', frame, 'webcam',media_id, i, camera_backend)
             except Exception:  # pylint: disable=broad-exception-caught
                 logger.exception("Failed to load webcam %s", i)
         self.main_window.placeholder_update_signal.emit(self.main_window.targetVideosList, False)
@@ -124,7 +124,7 @@ class TargetMediaLoaderWorker(qtc.QThread):
 
 class InputFacesLoaderWorker(qtc.QThread):
     # Define signals to emit when loading is done or if there are updates
-    thumbnail_ready = qtc.Signal(str, numpy.ndarray, object, QPixmap, str)
+    thumbnail_ready = qtc.Signal(str, numpy.ndarray, object, str)
     finished = qtc.Signal()  # Signal to indicate completion
     def __init__(self, main_window: 'MainWindow', media_path=False, folder_name=False, files_list=None, face_ids=None,  parent=None):
         super().__init__(parent)
@@ -212,8 +212,6 @@ class InputFacesLoaderWorker(qtc.QThread):
                 cropped_img = cropped_img.cpu().numpy()
                 cropped_img = cropped_img[..., ::-1]  # Swap the channels from RGB to BGR
                 face_img = numpy.ascontiguousarray(cropped_img)
-                # crop = cv2.resize(face[2].cpu().numpy(), (82, 82))
-                pixmap = common_widget_actions.get_pixmap_from_frame(self.main_window, face_img)
 
                 embedding_store: Dict[str, numpy.ndarray] = {}
                 # Ottenere i valori di 'options'
@@ -228,7 +226,7 @@ class InputFacesLoaderWorker(qtc.QThread):
                     face_id = str(uuid.uuid1().int)
                 else:
                     face_id = self.face_ids[i]
-                self.thumbnail_ready.emit(image_file_path, face_img, embedding_store, pixmap, face_id)
+                self.thumbnail_ready.emit(image_file_path, face_img, embedding_store, face_id)
                 i+=1
         torch.cuda.empty_cache()
         self.finished.emit()

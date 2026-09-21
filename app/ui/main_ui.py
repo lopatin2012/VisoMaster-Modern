@@ -2,6 +2,10 @@ from typing import Dict
 from pathlib import Path
 from functools import partial
 import copy
+import logging
+import threading
+
+import numpy as np
 
 from PySide6 import QtWidgets, QtGui
 from PySide6 import QtCore
@@ -33,12 +37,15 @@ from app.helpers.typing_helper import FacesParametersTypes, ParametersTypes, Con
 
 ParametersWidgetTypes = Dict[str, widget_components.ToggleButton|widget_components.SelectionBox|widget_components.ParameterDecimalSlider|widget_components.ParameterSlider|widget_components.ParameterText]
 
+logger = logging.getLogger(__name__)
+
 class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     placeholder_update_signal = QtCore.Signal(QtWidgets.QListWidget, bool)
     gpu_memory_update_signal = QtCore.Signal(int, int)
     model_loading_signal = QtCore.Signal()
     model_loaded_signal = QtCore.Signal()
     display_messagebox_signal = QtCore.Signal(str, str, QtWidgets.QWidget)
+    cuda_oom_signal = QtCore.Signal()
     def initialize_variables(self):
         self.video_loader_worker: ui_workers.TargetMediaLoaderWorker|bool = False
         self.input_faces_loader_worker: ui_workers.InputFacesLoaderWorker|bool = False
@@ -71,6 +78,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.copied_parameters: ParametersTypes = {}
         self.current_widget_parameters: ParametersTypes = {}
 
+        # Per-target-face temporal smoothing state for video (see smooth_face_keypoints).
+        self.face_smoothing_state: Dict[int, Dict[str, object]] = {}
+        self.face_smoothing_lock = threading.Lock()
+
         self.markers: MarkerTypes = {} #Video Markers (Contains parameters for each face)
         self.parameters_list = {}
         self.control: ControlTypes = {}
@@ -90,6 +101,72 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.model_loading_signal.connect(partial(common_widget_actions.show_model_loading_dialog, self))
         self.model_loaded_signal.connect(partial(common_widget_actions.hide_model_loading_dialog, self))
         self.display_messagebox_signal.connect(partial(common_widget_actions.create_and_show_messagebox, self))
+        self.cuda_oom_signal.connect(self.handle_cuda_oom)
+
+    def handle_cuda_oom(self):
+        """Stop processing, unload every model and release GPU memory.
+
+        Runs on the main thread after a worker reports CUDA OOM, so it is safe
+        to join the worker threads before freeing the sessions.
+        """
+        logger.error("CUDA out of memory; stopping processing and unloading models")
+        try:
+            self.video_processor.stop_processing()
+        except Exception:  # pylint: disable=broad-exception-caught
+            logger.exception("Failed to stop processing after CUDA OOM")
+        try:
+            self.models_processor.free_gpu_memory()
+        except Exception:  # pylint: disable=broad-exception-caught
+            logger.exception("Failed to free GPU memory after CUDA OOM")
+        self.display_messagebox_signal.emit(
+            i18n.tr("Out of GPU Memory"),
+            i18n.tr(
+                "The GPU ran out of memory, so processing was stopped and models were unloaded. "
+                "Lower the swapper resolution or disable heavy restorers/enhancers, then try again."
+            ),
+            self,
+        )
+
+    def smooth_face_keypoints(self, face_id, kps, amount, frame_number):
+        """EMA-smooth detected 5-point landmarks for a target face across frames.
+
+        ``amount`` is 1..100; <=0 returns the input unchanged. State is keyed by
+        target-face id and reset on seek/stop (see reset_face_smoothing).
+        """
+        try:
+            strength = max(0.0, min(100.0, float(amount))) / 100.0
+        except (TypeError, ValueError):
+            return kps
+        if strength <= 0.0:
+            return kps
+        # Map 1..100 to a blend weight on the new observation (0.99..0.1).
+        alpha = 1.0 - 0.89 * strength
+        with self.face_smoothing_lock:
+            state = self.face_smoothing_state.get(face_id)
+            if (
+                state is None
+                or frame_number is None
+                or abs(int(frame_number) - int(state['frame'])) > 2
+            ):
+                self.face_smoothing_state[face_id] = {
+                    'kps': np.array(kps, dtype=np.float32, copy=True),
+                    'frame': frame_number,
+                }
+                return kps
+            smoothed = (
+                alpha * np.asarray(kps, dtype=np.float32)
+                + (1.0 - alpha) * np.asarray(state['kps'], dtype=np.float32)
+            )
+            self.face_smoothing_state[face_id] = {
+                'kps': smoothed.copy(),
+                'frame': frame_number,
+            }
+        return smoothed
+
+    def reset_face_smoothing(self):
+        with self.face_smoothing_lock:
+            self.face_smoothing_state.clear()
+
     def initialize_widgets(self):
         # Initialize QListWidget for target media
         self.targetVideosList.setFlow(QtWidgets.QListWidget.LeftToRight)

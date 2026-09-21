@@ -1,12 +1,18 @@
+import logging
+
 from PySide6 import QtWidgets, QtGui, QtCore
 from typing import TYPE_CHECKING
 from app.helpers import perf
 if TYPE_CHECKING:
     from app.ui.main_ui import MainWindow
 
+logger = logging.getLogger(__name__)
+
 # @misc_helpers.benchmark  (Keep this decorator if you have it)
 def update_graphics_view(main_window: 'MainWindow', pixmap: QtGui.QPixmap, current_frame_number, reset_fit=False):
     # print('(update_graphics_view) current_frame_number', current_frame_number)
+    logger.debug("update_graphics_view start: frame=%s pixmap=%sx%s",
+                 current_frame_number, pixmap.width(), pixmap.height())
 
     # Update the video seek slider and line edit
     if main_window.videoSeekSlider.value() != current_frame_number:
@@ -25,8 +31,11 @@ def update_graphics_view(main_window: 'MainWindow', pixmap: QtGui.QPixmap, curre
     scene = main_window.graphicsViewFrame.scene()
     pixmap_item = None
     previous_items = scene.items()
-    if previous_items:
-        pixmap_item = previous_items[0]  # Assume pixmap is the first item
+    # Find the actual pixmap item instead of blindly trusting the first one.
+    for item in previous_items:
+        if isinstance(item, QtWidgets.QGraphicsPixmapItem):
+            pixmap_item = item
+            break
 
     # Resize the pixmap if necessary (only if pixmap_item exists)
     if pixmap_item:
@@ -52,6 +61,8 @@ def update_graphics_view(main_window: 'MainWindow', pixmap: QtGui.QPixmap, curre
         fit_image_to_view(main_window, pixmap_item, scene_rect) # Pass pixmap_item here
     # else: # No longer need to restore transform if we are not clearing scene
     #     zoom_andfit_image_to_view_onchange(main_window, current_transform) # No longer needed
+    logger.debug("update_graphics_view done: frame=%s item_rect=%sx%s",
+                 current_frame_number, scene_rect.width(), scene_rect.height())
 
 
 update_graphics_view = perf.wrap(update_graphics_view, "display_graphics")

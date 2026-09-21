@@ -2225,6 +2225,114 @@ def histogram_matching_DFL_Orig(source_image, target_image, mask, diffslider):
 
     return final_image
 
+def lab_color_transfer(source_image, target_image, mask, diffslider):
+    """Mask-aware Reinhard color transfer in LAB space.
+
+    Transfers the per-channel mean/std of ``source_image`` (reference face) onto
+    ``target_image`` (the swap), computing statistics only inside ``mask`` (so
+    background/dark pixels do not bias the result). ``diffslider`` (0..100)
+    blends the matched result with the original target.
+    """
+    device = source_image.device
+    source = source_image.float().to(device) / 255.0
+    target = target_image.float().to(device) / 255.0
+    src_lab = rgb_to_lab(source)
+    tgt_lab = rgb_to_lab(target)
+
+    valid = None
+    if mask is not None:
+        m = mask.float().to(device)
+        if m.dim() == 3:
+            if m.size(0) == 1:
+                m = m.squeeze(0)
+            elif m.size(-1) == 1:
+                m = m.squeeze(-1)
+        if float(m.max()) > 1.0:
+            m = m / 255.0
+        valid = m > 0.2
+
+    for channel in range(3):
+        source_channel = src_lab[channel]
+        target_channel = tgt_lab[channel]
+        if valid is not None:
+            source_values = source_channel[valid]
+            target_values = target_channel[valid]
+        else:
+            source_values = source_channel.reshape(-1)
+            target_values = target_channel.reshape(-1)
+        if source_values.numel() < 2 or target_values.numel() < 2:
+            continue
+        source_mean = source_values.mean()
+        source_std = source_values.std(unbiased=False) + 1e-5
+        target_mean = target_values.mean()
+        target_std = target_values.std(unbiased=False) + 1e-5
+        tgt_lab[channel] = (target_channel - target_mean) * (source_std / target_std) + source_mean
+
+    matched = lab_to_rgb(tgt_lab)
+    alpha = float(diffslider) / 100.0
+    final_image = (1.0 - alpha) * target + alpha * matched
+    return torch.clamp(final_image * 255.0, 0.0, 255.0).float().to(device)
+
+def laplacian_blend(foreground, background, mask, levels=3):
+    """Multi-band (Laplacian pyramid) blend of two images through ``mask``.
+
+    ``foreground``/``background`` are (H, W, C) tensors in [0, 255]; ``mask`` is
+    (H, W, 1) or (H, W) with 1 where the foreground wins. Returns (H, W, C).
+    Multi-band blending removes the visible transition seam/halo that plain
+    feathered alpha compositing leaves behind.
+    """
+    fg = foreground.permute(2, 0, 1).float().unsqueeze(0)
+    bg = background.permute(2, 0, 1).float().unsqueeze(0)
+    m = mask.float()
+    if m.dim() == 2:
+        m = m.unsqueeze(-1)
+    m = m.permute(2, 0, 1).unsqueeze(0)
+
+    def blur(tensor):
+        kernel = torch.tensor(
+            [[1.0, 2.0, 1.0], [2.0, 4.0, 2.0], [1.0, 2.0, 1.0]],
+            device=tensor.device,
+            dtype=tensor.dtype,
+        )
+        kernel = kernel / kernel.sum()
+        kernel = kernel.expand(tensor.shape[1], 1, 3, 3)
+        padded = torch.nn.functional.pad(tensor, (1, 1, 1, 1), mode="replicate")
+        return torch.nn.functional.conv2d(padded, kernel, groups=tensor.shape[1])
+
+    def downsample(tensor):
+        return torch.nn.functional.interpolate(
+            tensor, scale_factor=0.5, mode="bilinear", align_corners=False
+        )
+
+    def upsample(tensor, size):
+        return torch.nn.functional.interpolate(
+            tensor, size=size, mode="bilinear", align_corners=False
+        )
+
+    min_side = max(2, min(int(fg.shape[-2]), int(fg.shape[-1])))
+    max_levels = max(1, int(math.log2(min_side)) - 1)
+    levels = max(1, min(int(levels), 5, max_levels))
+
+    gp_fg, gp_bg, gp_m = [fg], [bg], [m]
+    for _ in range(levels):
+        gp_fg.append(downsample(blur(gp_fg[-1])))
+        gp_bg.append(downsample(blur(gp_bg[-1])))
+        gp_m.append(downsample(blur(gp_m[-1])))
+
+    blended_levels = []
+    for i in range(levels):
+        size = gp_fg[i].shape[-2:]
+        level_fg = gp_fg[i] - upsample(gp_fg[i + 1], size)
+        level_bg = gp_bg[i] - upsample(gp_bg[i + 1], size)
+        level_mask = gp_m[i]
+        blended_levels.append(level_fg * level_mask + level_bg * (1.0 - level_mask))
+
+    top = gp_fg[levels] * gp_m[levels] + gp_bg[levels] * (1.0 - gp_m[levels])
+    for i in range(levels - 1, -1, -1):
+        top = upsample(top, blended_levels[i].shape[-2:]) + blended_levels[i]
+
+    return torch.clamp(top, 0.0, 255.0).squeeze(0).permute(1, 2, 0)
+
 def transform_t(img, center, output_size, scale, rotation):
     device = img.device
     dtype = img.dtype
