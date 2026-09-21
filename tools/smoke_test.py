@@ -118,6 +118,15 @@ def main():
     check(bool(torch.allclose(matched.mean(dim=(1, 2)), source[:, 0, 0], atol=6.0)),
           "lab_color_transfer matches the source color statistics")
 
+    # Thumbnail slots must accept the raw frame (QPixmap is built on the GUI thread).
+    from app.ui.widgets.actions import list_view_actions
+    frame_bgr = np.zeros((112, 112, 3), dtype=np.uint8)
+    try:
+        list_view_actions.add_media_thumbnail_to_target_faces_list(window, frame_bgr, {}, "smoke_face")
+        check(True, "target-face thumbnail slot accepts a numpy frame")
+    except Exception as exc:  # noqa: BLE001
+        check(False, f"target-face thumbnail slot raised: {exc!r}")
+
     # Standard Qt widgets that must NOT be the Fluent variants (they broke rendering).
     check(type(window.videoSeekSlider) is QtWidgets.QSlider, "videoSeekSlider is a plain QSlider")
     check(type(window.vramProgressBar) is QtWidgets.QProgressBar, "vramProgressBar is a plain QProgressBar")

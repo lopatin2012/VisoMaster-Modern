@@ -25,8 +25,8 @@ def add_webcam_thumbnail_to_target_videos_list(main_window: 'MainWindow', media_
     add_media_thumbnail_button(main_window, widget_components.TargetMediaCardButton, main_window.targetVideosList, main_window.target_videos, pixmap, media_path=media_path, file_type=file_type, media_id=media_id, is_webcam=True, webcam_index=webcam_index, webcam_backend=webcam_backend)
 
 @QtCore.Slot()
-def add_media_thumbnail_to_target_faces_list(main_window: 'MainWindow', cropped_face, embedding_store, frame, face_id):
-    pixmap = common_widget_actions.thumbnail_frame_to_pixmap(frame)
+def add_media_thumbnail_to_target_faces_list(main_window: 'MainWindow', cropped_face, embedding_store, face_id):
+    pixmap = common_widget_actions.thumbnail_frame_to_pixmap(cropped_face)
     add_media_thumbnail_button(main_window, widget_components.TargetFaceCardButton, main_window.targetFacesList, main_window.target_faces, pixmap, cropped_face=cropped_face, embedding_store=embedding_store, face_id=face_id )
 
 @QtCore.Slot()

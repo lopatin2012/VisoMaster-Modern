@@ -110,8 +110,6 @@ def find_target_faces(main_window: 'MainWindow'):
                         face_img = face[2].cpu().numpy()
                         face_img = face_img[..., ::-1]  # Swap the channels from RGB to BGR
                         face_img = numpy.ascontiguousarray(face_img)
-                        # crop = cv2.resize(face[2].cpu().numpy(), (82, 82))
-                        pixmap = common_widget_actions.get_pixmap_from_frame(main_window, face_img)
 
                         embedding_store: Dict[str, numpy.ndarray] = {}
                         # Ottenere i valori di 'options'
@@ -125,7 +123,7 @@ def find_target_faces(main_window: 'MainWindow'):
 
                         face_id = str(uuid.uuid1().int)
 
-                        list_view_actions.add_media_thumbnail_to_target_faces_list(main_window, face_img, embedding_store, pixmap, face_id)
+                        list_view_actions.add_media_thumbnail_to_target_faces_list(main_window, face_img, embedding_store, face_id)
             # Select the first target face if no target face is already selected
         if main_window.target_faces and not main_window.selected_target_face_id:
             list(main_window.target_faces.values())[0].click()
